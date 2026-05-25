@@ -1,1012 +1,1557 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>采购项目助手</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif; background: #f0f2f5; color: #1a1a2e; min-height: 100vh; }
-    .header { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); color: #fff; padding: 16px 32px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 12px rgba(0,0,0,0.15); position: sticky; top: 0; z-index: 100; }
-    .header h1 { font-size: 22px; font-weight: 700; letter-spacing: 1px; }
-    .header h1 span { color: #e94560; }
-    .header-right { display: flex; align-items: center; gap: 20px; }
-    .role-tag { background: rgba(255,255,255,0.15); padding: 6px 14px; border-radius: 20px; font-size: 13px; }
-    .role-select { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.25); color: #fff; padding: 6px 12px; border-radius: 20px; font-size: 13px; cursor: pointer; outline: none; }
-    .role-select option { color: #1a1a2e; }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>安可的打卡</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
 
-    .container { max-width: 1600px; margin: 0 auto; padding: 24px 24px; }
-    .page { display: none; }
-    .page.active { display: block; }
+        body {
+            background-color: #f9fafb;
+            min-height: 100vh;
+        }
 
-    /* 统计卡片 */
-    .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
-    .stat-card { background: #fff; border-radius: 12px; padding: 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); border-left: 4px solid; }
-    .stat-card .stat-value { font-size: 32px; font-weight: 700; }
-    .stat-card .stat-label { font-size: 13px; color: #666; margin-top: 4px; }
-    .stat-card.total { border-left-color: #0f3460; }
-    .stat-card.progress { border-left-color: #e94560; }
-    .stat-card.done { border-left-color: #10b981; }
-    .stat-card.total .stat-value { color: #0f3460; }
-    .stat-card.progress .stat-value { color: #e94560; }
-    .stat-card.done .stat-value { color: #10b981; }
+        /* 图标通用样式 */
+        .icon-svg {
+            width: 24px;
+            height: 24px;
+            fill: currentColor;
+        }
 
-    /* 操作栏 */
-    .toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
-    .btn { padding: 10px 22px; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px; }
-    .btn-primary { background: #0f3460; color: #fff; }
-    .btn-primary:hover { background: #1a4a80; }
-    .btn-success { background: #10b981; color: #fff; }
-    .btn-success:hover { background: #059669; }
-    .btn-danger { background: #ef4444; color: #fff; }
-    .btn-danger:hover { background: #dc2626; }
-    .btn-outline { background: #fff; color: #0f3460; border: 1.5px solid #0f3460; }
-    .btn-outline:hover { background: #f0f4ff; }
-    .btn-sm { padding: 6px 14px; font-size: 12px; border-radius: 6px; }
-    .btn-xs { padding: 4px 10px; font-size: 11px; border-radius: 4px; }
-    .btn-back { background: transparent; color: #666; border: 1px solid #ddd; }
-    .btn-back:hover { background: #f5f5f5; }
+        .task-icon .icon-svg {
+            width: 28px;
+            height: 28px;
+        }
 
-    /* 项目表格 */
-    .table-wrapper { background: #fff; border-radius: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); overflow: hidden; }
-    .table-wrapper table { width: 100%; border-collapse: collapse; }
-    .table-wrapper th { background: #f8f9fb; padding: 12px 12px; text-align: left; font-size: 13px; color: #666; font-weight: 600; border-bottom: 2px solid #e5e7eb; white-space: nowrap; }
-    .table-wrapper td { padding: 12px 12px; font-size: 13px; border-bottom: 1px solid #f0f0f0; }
-    .table-wrapper tr:hover td { background: #fafbfc; }
-    .table-wrapper tbody tr { cursor: pointer; }
-    .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; white-space: nowrap; }
-    .badge-kaocha { background: #eff6ff; color: #2563eb; }
-    .badge-danyi { background: #fef3c7; color: #d97706; }
-    .progress-bar-wrap { display: flex; align-items: center; gap: 10px; }
-    .progress-bar { flex: 1; height: 8px; background: #e5e7eb; border-radius: 4px; overflow: hidden; min-width: 60px; }
-    .progress-bar-fill { height: 100%; background: linear-gradient(90deg, #0f3460, #e94560); border-radius: 4px; transition: width 0.5s ease; }
-    .progress-text { font-size: 11px; color: #666; white-space: nowrap; min-width: 34px; text-align: right; }
+        .day-task-icon .icon-svg,
+        .task-stat-icon .icon-svg {
+            width: 20px;
+            height: 20px;
+        }
 
-    /* 模态框 */
-    .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 999; justify-content: center; align-items: center; }
-    .modal-overlay.active { display: flex; }
-    .modal { background: #fff; border-radius: 16px; padding: 32px; width: 90%; max-width: 500px; box-shadow: 0 16px 48px rgba(0,0,0,0.2); }
-    .modal h3 { font-size: 20px; margin-bottom: 24px; color: #1a1a2e; }
-    .form-group { margin-bottom: 20px; }
-    .form-group label { display: block; font-size: 14px; font-weight: 600; color: #333; margin-bottom: 8px; }
-    .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px 14px; border: 1.5px solid #e0e0e0; border-radius: 8px; font-size: 14px; transition: border-color 0.2s; outline: none; font-family: inherit; }
-    .form-group input:focus, .form-group select:focus { border-color: #0f3460; }
-    .modal-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px; }
+        /* 顶部导航 */
+        header {
+            background: linear-gradient(to right, #4F46E5, #7C3AED);
+            color: white;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
 
-    /* 空状态 */
-    .empty-state { text-align: center; padding: 60px 20px; color: #999; }
-    .empty-state .icon { font-size: 56px; margin-bottom: 16px; opacity: 0.4; }
+        .header-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
 
-    /* 项目详情 */
-    .detail-header { background: #fff; border-radius: 12px; padding: 24px 28px; margin-bottom: 24px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; }
-    .detail-header h2 { font-size: 20px; color: #1a1a2e; }
-    .detail-meta { display: flex; gap: 24px; align-items: center; flex-wrap: wrap; }
-    .detail-meta-item { font-size: 13px; color: #666; }
-    .detail-meta-item strong { color: #333; }
-    .detail-summary { display: flex; gap: 20px; align-items: center; flex-wrap: wrap; }
-    .summary-card { background: #fff; border-radius: 10px; padding: 16px 20px; text-align: center; min-width: 100px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
-    .summary-card .num { font-size: 28px; font-weight: 700; }
-    .summary-card .num.blue { color: #2563eb; }
-    .summary-card .num.green { color: #10b981; }
-    .summary-card .num.orange { color: #f59e0b; }
-    .summary-card .lbl { font-size: 11px; color: #999; margin-top: 2px; }
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+        }
 
-    /* 环节时间线 */
-    .timeline { background: #fff; border-radius: 12px; padding: 28px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
-    .timeline h3 { font-size: 17px; margin-bottom: 24px; color: #1a1a2e; display: flex; align-items: center; gap: 8px; }
-    .timeline-item { display: flex; gap: 16px; position: relative; padding-bottom: 24px; }
-    .timeline-item:last-child { padding-bottom: 0; }
-    .timeline-marker { width: 32px; display: flex; flex-direction: column; align-items: center; flex-shrink: 0; }
-    .timeline-dot { width: 14px; height: 14px; border-radius: 50%; border: 3px solid #d1d5db; background: #fff; z-index: 1; transition: all 0.3s; }
-    .timeline-dot.completed { background: #10b981; border-color: #10b981; }
-    .timeline-dot.current { background: #fff; border-color: #e94560; box-shadow: 0 0 0 4px rgba(233,69,96,0.15); }
-    .timeline-line { width: 2px; flex: 1; background: #e5e7eb; margin: 4px 0; min-height: 20px; }
-    .timeline-line.completed { background: #10b981; }
-    .timeline-item:last-child .timeline-line { display: none; }
-    .timeline-content { flex: 1; padding-bottom: 4px; }
-    .timeline-title { font-size: 15px; font-weight: 600; color: #1a1a2e; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-    .timeline-duration { font-size: 12px; padding: 3px 8px; border-radius: 12px; font-weight: 500; }
-    .timeline-duration.fast { background: #d1fae5; color: #059669; }
-    .timeline-duration.medium { background: #fef3c7; color: #d97706; }
-    .timeline-duration.long { background: #fee2e2; color: #dc2626; }
-    .timeline-duration.done { background: #e5e7eb; color: #6b7280; }
-    .timeline-note { font-size: 12px; color: #999; margin-top: 4px; line-height: 1.5; }
-    .timeline-actions { margin-top: 8px; display: flex; gap: 8px; }
-    .completed-badge { display: inline-flex; align-items: center; gap: 4px; color: #10b981; font-size: 12px; font-weight: 600; }
-    .pending-badge { display: inline-flex; align-items: center; gap: 4px; color: #9ca3af; font-size: 12px; }
+        .logo-icon {
+            font-size: 24px;
+        }
 
-    /* 筛选 */
-    .filter-group { display: flex; gap: 8px; }
-    .filter-select { padding: 8px 14px; border: 1.5px solid #e0e0e0; border-radius: 8px; font-size: 13px; color: #333; outline: none; cursor: pointer; background: #fff; }
-    .filter-select:focus { border-color: #0f3460; }
+        .logo-title {
+            font-size: 20px;
+            font-weight: bold;
+        }
 
-    .detail-header .btn-back { margin-right: auto; }
+        .header-buttons {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 8px;
+            justify-content: flex-end;
+            flex: 1;
+        }
 
-    /* 分享区域 */
-    .share-section { background: #fff; border-radius: 12px; padding: 24px 28px; margin-top: 24px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
-    .share-section h3 { font-size: 16px; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
-    .share-list { display: flex; flex-direction: column; gap: 10px; }
-    .share-item { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: #f8f9fb; border-radius: 8px; }
-    .share-item-info { display: flex; align-items: center; gap: 12px; }
-    .share-permission-badge { padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; }
-    .share-permission-badge.edit { background: #dbeafe; color: #2563eb; }
-    .share-permission-badge.view { background: #f3f4f6; color: #6b7280; }
-    .share-empty { text-align: center; padding: 20px; color: #999; font-size: 13px; }
+        .welcome-text {
+            font-size: 14px;
+            margin-right: 8px;
+            display: none;
+        }
 
-    /* 访问标签 */
-    .access-tag { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; white-space: nowrap; }
-    .access-tag.owner { background: #d1fae5; color: #059669; }
-    .access-tag.shared-edit { background: #dbeafe; color: #2563eb; }
-    .access-tag.shared-view { background: #f3f4f6; color: #6b7280; }
+        .btn {
+            background-color: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            min-width: 44px;
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
 
-    .est-date { font-size: 12px; color: #f59e0b; font-weight: 500; white-space: nowrap; }
-    .est-date.done { color: #10b981; }
+        .btn:hover {
+            background-color: rgba(255, 255, 255, 0.3);
+        }
 
-    /* 模板管理 */
-    .admin-page { background: #fff; border-radius: 12px; padding: 28px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
-    .admin-page h2 { font-size: 20px; margin-bottom: 8px; color: #1a1a2e; }
-    .admin-page .subtitle { font-size: 13px; color: #999; margin-bottom: 24px; }
-    .type-card { background: #f8f9fb; border-radius: 10px; padding: 20px; margin-bottom: 16px; border: 1px solid #e5e7eb; }
-    .type-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
-    .type-card-header h3 { font-size: 16px; color: #1a1a2e; }
-    .stage-editor-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 12px; }
-    .stage-editor-table th { background: #eef0f4; padding: 8px 10px; text-align: left; font-weight: 600; color: #555; font-size: 12px; }
-    .stage-editor-table td { padding: 6px 8px; border-bottom: 1px solid #e5e7eb; vertical-align: middle; }
-    .stage-editor-table input, .stage-editor-table textarea { width: 100%; padding: 6px 8px; border: 1.5px solid #e0e0e0; border-radius: 6px; font-size: 13px; outline: none; font-family: inherit; resize: vertical; }
-    .stage-editor-table input:focus, .stage-editor-table textarea:focus { border-color: #0f3460; }
-    .stage-editor-table .order-col { width: 50px; text-align: center; }
-    .stage-editor-table .name-col { min-width: 160px; }
-    .stage-editor-table .duration-col { width: 90px; }
-    .stage-editor-table .label-col { width: 100px; }
-    .stage-editor-table .note-col { min-width: 140px; }
-    .stage-editor-table .action-col { width: 50px; text-align: center; }
-    .btn-icon { width: 28px; height: 28px; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; display: inline-flex; align-items: center; justify-content: center; }
-    .btn-icon.danger { background: #fee2e2; color: #dc2626; }
-    .btn-icon.danger:hover { background: #fecaca; }
+        .btn-text {
+            display: none;
+            margin-left: 4px;
+        }
 
-    @media (max-width: 768px) {
-      .header { padding: 12px 16px; }
-      .header h1 { font-size: 18px; }
-      .container { padding: 16px 12px; }
-      .detail-summary { justify-content: center; }
-      .timeline { padding: 20px 16px; }
-      .table-wrapper { overflow-x: auto; }
-      .toolbar { flex-direction: column; align-items: stretch; }
-    }
-  </style>
+        /* 主要内容 */
+        .main-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 24px 16px;
+        }
+
+        /* 欢迎页面 */
+        .welcome-card {
+            background-color: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            max-width: 600px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .welcome-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        .welcome-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: #1f2937;
+            margin-bottom: 8px;
+        }
+
+        .welcome-desc {
+            color: #6b7280;
+            margin-bottom: 32px;
+        }
+
+        .parent-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        .parent-btn {
+            padding: 20px;
+            border-radius: 12px;
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 16px;
+        }
+
+        .parent-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .parent-btn.dad { background-color: #dbeafe; color: #1d4ed8; border-color: #93c5fd; }
+        .parent-btn.mom { background-color: #fce7f3; color: #be185d; border-color: #f9a8d4; }
+        .parent-btn.grandpa { background-color: #dcfce7; color: #166534; border-color: #86efac; }
+        .parent-btn.grandma { background-color: #ffedd5; color: #9a3412; border-color: #fdba74; }
+        .parent-btn.gonggong { background-color: #f3e8ff; color: #7e22ce; border-color: #d8b4fe; }
+        .parent-btn.laolao { background-color: #fee2e2; color: #991b1b; border-color: #fca5a5; }
+
+        .parent-icon {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+
+        /* 视图切换 */
+        .view-tabs {
+            display: flex;
+            background-color: white;
+            border-radius: 12px;
+            padding: 4px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            margin-bottom: 24px;
+            overflow: hidden;
+            flex-wrap: wrap;
+        }
+
+        .view-btn {
+            flex: 1;
+            padding: 10px 12px;
+            border: none;
+            background-color: transparent;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+            min-width: 100px;
+        }
+
+        .view-btn.active {
+            background-color: #4F46E5;
+            color: white;
+        }
+
+        .view-btn:not(.active):hover {
+            background-color: #f3f4f6;
+        }
+
+        .share-btn {
+            background: linear-gradient(to right, #ec4899, #f97316);
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            font-weight: 500;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            transition: all 0.2s;
+            width: 100%;
+            margin-bottom: 24px;
+        }
+
+        .share-btn:hover {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .view-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        /* 任务分类标签 */
+        .category-tabs {
+            display: flex;
+            overflow-x: auto;
+            gap: 8px;
+            padding-bottom: 12px;
+            margin-bottom: 24px;
+            scrollbar-width: none;
+        }
+
+        .category-tabs::-webkit-scrollbar {
+            display: none;
+        }
+
+        .category-btn {
+            padding: 8px 16px;
+            border-radius: 20px;
+            border: none;
+            background-color: #e5e7eb;
+            color: #374151;
+            cursor: pointer;
+            font-size: 14px;
+            white-space: nowrap;
+            transition: all 0.2s;
+        }
+
+        .category-btn.active {
+            background-color: #4F46E5;
+            color: white;
+        }
+
+        .category-btn:not(.active):hover {
+            background-color: #d1d5db;
+        }
+
+        /* 任务卡片 */
+        .task-group {
+            margin-bottom: 32px;
+        }
+
+        .group-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #1f2937;
+            margin-bottom: 16px;
+        }
+
+        .task-card {
+            background-color: white;
+            border-radius: 12px;
+            border: 2px solid #e5e7eb;
+            padding: 20px;
+            margin-bottom: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            transition: all 0.2s;
+        }
+
+        .task-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        .task-card.checked {
+            background-color: #f0fdf4;
+            border-color: #86efac;
+        }
+
+        .task-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .task-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex: 1;
+        }
+
+        .task-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .task-info h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 4px;
+        }
+
+        .task-target {
+            font-size: 14px;
+            color: #6b7280;
+        }
+
+        .task-meta {
+            font-size: 12px;
+            color: #16a34a;
+            margin-top: 4px;
+        }
+
+        .task-actions {
+            display: flex;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        .action-btn {
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: none;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            min-width: 70px;
+        }
+
+        .checkin-btn {
+            background-color: #22c55e;
+            color: white;
+        }
+
+        .checkin-btn:hover {
+            background-color: #16a34a;
+        }
+
+        .cancel-btn {
+            background-color: #fecaca;
+            color: #dc2626;
+        }
+
+        .cancel-btn:hover {
+            background-color: #fca5a5;
+        }
+
+        /* 颜色类 */
+        .color-blue { background-color: #dbeafe; color: #1d4ed8; }
+        .color-green { background-color: #dcfce7; color: #166534; }
+        .color-purple { background-color: #f3e8ff; color: #7e22ce; }
+        .color-orange { background-color: #ffedd5; color: #9a3412; }
+        .color-red { background-color: #fee2e2; color: #991b1b; }
+        .color-indigo { background-color: #e0e7ff; color: #4338ca; }
+        .color-pink { background-color: #fce7f3; color: #be185d; }
+        .color-teal { background-color: #ccfbf1; color: #0f766e; }
+        .color-yellow { background-color: #fef3c7; color: #92400e; }
+
+        .bg-green-100 { background-color: #dcfce7; color: #166534; }
+
+        /* 日历视图 */
+        .calendar-container {
+            background-color: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            margin-bottom: 24px;
+        }
+
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .calendar-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #1f2937;
+        }
+
+        .calendar-nav {
+            padding: 8px 12px;
+            border: 1px solid #e5e7eb;
+            background-color: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .calendar-nav:hover {
+            background-color: #f9fafb;
+        }
+
+        .calendar-weekdays {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .weekday {
+            text-align: center;
+            font-size: 14px;
+            font-weight: 500;
+            color: #6b7280;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+        }
+
+        .calendar-cell {
+            aspect-ratio: 1;
+            border: 1px solid #e5e7eb;
+            background-color: white;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            padding: 4px;
+        }
+
+        .calendar-cell:hover {
+            background-color: #f9fafb;
+        }
+
+        .calendar-cell.today {
+            border: 2px solid #4F46E5;
+        }
+
+        .calendar-cell.other-month {
+            background-color: #f9fafb;
+            color: #d1d5db;
+        }
+
+        .calendar-cell.selected {
+            background-color: #e0e7ff;
+            border-color: #4F46E5;
+        }
+
+        .day-number {
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 2px;
+        }
+
+        .badge {
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 10px;
+            color: white;
+        }
+
+        .badge-green { background-color: #22c55e; }
+        .badge-yellow { background-color: #eab308; }
+        .badge-blue { background-color: #3b82f6; }
+
+        /* 当日任务详情 */
+        .day-tasks-container {
+            background-color: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .day-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #1f2937;
+            margin-bottom: 16px;
+        }
+
+        .day-task-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            background-color: #f9fafb;
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+
+        .day-task-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .day-task-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .day-task-info h5 {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 2px;
+        }
+
+        .day-task-meta {
+            font-size: 12px;
+            color: #6b7280;
+        }
+
+        .day-task-status {
+            font-size: 12px;
+            background-color: #dcfce7;
+            color: #166534;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-weight: 500;
+        }
+
+        /* 统计视图 */
+        .stats-container {
+            background-color: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            margin-bottom: 24px;
+        }
+
+        .stats-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .stats-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #1f2937;
+        }
+
+        .stats-tabs {
+            display: flex;
+            background-color: #f3f4f6;
+            border-radius: 8px;
+            padding: 2px;
+        }
+
+        .stats-tab-btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            background-color: transparent;
+            transition: all 0.2s;
+        }
+
+        .stats-tab-btn.active {
+            background-color: #4F46E5;
+            color: white;
+        }
+
+        .date-range-picker {
+            margin-bottom: 20px;
+            padding: 12px 16px;
+            background-color: #f9fafb;
+            border-radius: 10px;
+        }
+
+        .date-range-inputs {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .date-range-inputs input[type="date"] {
+            flex: 1;
+            min-width: 120px;
+            padding: 8px 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .date-range-inputs input[type="date"]:focus {
+            outline: none;
+            border-color: #4F46E5;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+
+        .date-range-inputs span {
+            color: #6b7280;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+
+        .date-range-inputs .query-btn {
+            flex: none;
+            padding: 8px 16px;
+            background-color: #4F46E5;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .date-range-inputs .query-btn:hover {
+            background-color: #4338ca;
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .chart-type-tabs {
+            display: flex;
+            background-color: #f3f4f6;
+            border-radius: 6px;
+            padding: 2px;
+        }
+
+        .chart-type-btn {
+            padding: 4px 10px;
+            border: none;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            background-color: transparent;
+            transition: all 0.2s;
+            color: #6b7280;
+        }
+
+        .chart-type-btn.active {
+            background-color: #4F46E5;
+            color: white;
+        }
+
+        .stats-cards {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        .stat-card {
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .stat-card.blue { background-color: #eff6ff; }
+        .stat-card.green { background-color: #f0fdf4; }
+        .stat-card.purple { background-color: #faf5ff; }
+        .stat-card.orange { background-color: #fff7ed; }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 12px;
+            font-size: 20px;
+        }
+
+        .stat-icon.blue { background-color: #dbeafe; color: #1d4ed8; }
+        .stat-icon.green { background-color: #dcfce7; color: #166534; }
+        .stat-icon.purple { background-color: #f3e8ff; color: #7e22ce; }
+        .stat-icon.orange { background-color: #ffedd5; color: #9a3412; }
+
+        .stat-number {
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
+
+        .stat-number.blue { color: #1d4ed8; }
+        .stat-number.green { color: #166534; }
+        .stat-number.purple { color: #7e22ce; }
+        .stat-number.orange { color: #9a3412; }
+
+        .stat-label {
+            font-size: 14px;
+            color: #6b7280;
+        }
+
+        /* 自定义图表样式 */
+        .chart-container {
+            background-color: #f9fafb;
+            border-radius: 12px;
+            padding: 20px;
+            height: 300px;
+        }
+
+        .chart-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .chart-svg {
+            width: 100%;
+            height: calc(100% - 40px);
+        }
+
+        .chart-bar {
+            fill: url(#gradient);
+            rx: 4;
+            ry: 4;
+            transition: height 0.3s ease;
+        }
+
+        .chart-label {
+            font-size: 12px;
+            fill: #6b7280;
+            text-anchor: middle;
+        }
+
+        .chart-value {
+            font-size: 11px;
+            font-weight: 500;
+            fill: #4F46E5;
+            text-anchor: middle;
+        }
+
+        .task-stats-container {
+            background-color: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .task-stats-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #1f2937;
+            margin-bottom: 16px;
+        }
+
+        .task-stat-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            background-color: #f9fafb;
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+
+        .task-stat-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .task-stat-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .task-stat-info h5 {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 2px;
+        }
+
+        .task-stat-category {
+            font-size: 12px;
+            color: #6b7280;
+        }
+
+        .task-stat-count {
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        /* 模态框 */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 100;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+        }
+
+        .modal-content {
+            background-color: white;
+            border-radius: 16px;
+            width: 100%;
+            max-width: 480px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #1f2937;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: #6b7280;
+            padding: 4px;
+        }
+
+        .modal-body {
+            padding: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 6px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #4F46E5;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        .btn-secondary {
+            flex: 1;
+            padding: 10px;
+            background-color: #e5e7eb;
+            color: #374151;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .btn-secondary:hover {
+            background-color: #d1d5db;
+        }
+
+        .btn-primary {
+            flex: 1;
+            padding: 10px;
+            background-color: #4F46E5;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .btn-primary:hover {
+            background-color: #4338ca;
+        }
+
+        .btn-danger {
+            padding: 10px;
+            background-color: #ef4444;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .btn-danger:hover {
+            background-color: #dc2626;
+        }
+
+        .btn-green {
+            flex: 1;
+            padding: 10px;
+            background-color: #22c55e;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .btn-green:hover {
+            background-color: #16a34a;
+        }
+
+        .hr {
+            border: none;
+            border-top: 1px solid #e5e7eb;
+            margin: 24px 0;
+        }
+
+        .existing-tasks-list {
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 16px;
+        }
+
+        .existing-task-item {
+            padding: 8px;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .existing-task-item:hover {
+            background-color: #f9fafb;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 48px 16px;
+            color: #6b7280;
+        }
+
+        .empty-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            padding: 12px 20px;
+            border-radius: 8px;
+            color: white;
+            font-size: 14px;
+            z-index: 1000;
+            animation: slideIn 0.3s ease;
+        }
+
+        .toast.success { background-color: #22c55e; }
+        .toast.error { background-color: #ef4444; }
+        .toast.info { background-color: #3b82f6; }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* 分享图片弹窗 */
+        .share-image-container {
+            text-align: center;
+        }
+
+        .share-image {
+            max-width: 100%;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .share-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        /* 响应式适配 */
+        @media (min-width: 768px) {
+            .header-container {
+                padding: 16px 24px;
+                flex-wrap: nowrap;
+            }
+
+            .logo-title {
+                font-size: 24px;
+            }
+
+            .logo-icon {
+                font-size: 28px;
+            }
+
+            .header-buttons {
+                margin-top: 0;
+                flex: none;
+            }
+
+            .welcome-text {
+                display: block;
+            }
+
+            .btn-text {
+                display: inline;
+            }
+
+            .btn {
+                min-width: auto;
+                min-height: auto;
+            }
+
+            .main-container {
+                padding: 32px 24px;
+            }
+
+            .parent-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+
+            .view-tabs {
+                flex-wrap: nowrap;
+            }
+
+            .view-btn {
+                min-width: auto;
+                padding: 12px 20px;
+                font-size: 14px;
+            }
+
+            .share-btn {
+                width: auto;
+                margin-bottom: 0;
+            }
+
+            .view-header {
+                flex-wrap: nowrap;
+            }
+
+            .stats-cards {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+        @media (min-width: 1024px) {
+            .stats-cards {
+                grid-template-columns: repeat(6, 1fr);
+            }
+        }
+    </style>
+
+    <!-- 全局函数 -->
+    <script>
+        // 全局错误捕获
+        window.onerror = function(msg, url, line) {
+            console.error("系统错误:", msg, "第" + line + "行");
+            showToast("系统出了点小问题，请刷新页面重试", "error");
+            return true;
+        };
+
+        // 家长选择函数
+        window.selectParent = function(role) {
+            try {
+                localStorage.setItem("currentParent", role);
+                window.currentParent = role;
+
+                const welcome = document.getElementById("welcomeSection");
+                const dashboard = document.getElementById("dashboardSection");
+                const parentName = document.getElementById("parentName");
+                const parentInfo = document.getElementById("parentInfo");
+
+                if (welcome) welcome.classList.add("hidden");
+                if (dashboard) dashboard.classList.remove("hidden");
+                if (parentName) parentName.textContent = role;
+                if (parentInfo) parentInfo.style.display = "flex";
+
+                if (window.initApp) {
+                    window.initApp();
+                }
+            } catch (e) {
+                alert("选择身份出错: " + e.message);
+            }
+        };
+
+        // 页面加载完成后初始化
+        if (document.readyState === "complete" || document.readyState === "interactive") {
+            if (window.initApp) window.initApp();
+        } else {
+            document.addEventListener("DOMContentLoaded", function() {
+                if (window.initApp) window.initApp();
+            });
+            window.addEventListener("load", function() {
+                if (window.initApp) window.initApp();
+            });
+        }
+    </script>
 </head>
 <body>
-
-<header class="header">
-  <h1>📋 <span>采购</span>项目助手</h1>
-  <div class="header-right">
-    <select class="role-select" id="roleSelect" onchange="switchRole()">
-      <optgroup label="项目经理">
-        <option value="张三">👤 张三</option>
-        <option value="李四">👤 李四</option>
-        <option value="王五">👤 王五</option>
-      </optgroup>
-      <optgroup label="团队经理">
-        <option value="罗伯特">👥 罗伯特</option>
-      </optgroup>
-      <optgroup label="项目管理员">
-        <option value="爱丽丝">🔧 爱丽丝</option>
-      </optgroup>
-    </select>
-  </div>
-</header>
-
-<div class="container">
-
-  <!-- ==================== 仪表盘页面 ==================== -->
-  <div class="page active" id="pageDashboard">
-    <div class="stats-row" id="statsRow"></div>
-
-    <div class="toolbar">
-      <div class="filter-group">
-        <select class="filter-select" id="filterType" onchange="loadProjects()">
-          <option value="">全部类型</option>
-        </select>
-        <input class="filter-select" type="text" id="filterSearch" placeholder="🔍 搜索项目名称..." oninput="loadProjects()" style="min-width:200px;">
-      </div>
-      <div style="display:flex;gap:8px;">
-        <button class="btn btn-primary" onclick="openCreateModal()">+ 创建项目</button>
-        <button class="btn btn-outline btn-sm" id="btnAdmin" style="display:none;" onclick="showAdminPage()">⚙️ 管理采购类型</button>
-      </div>
-    </div>
-
-    <div class="table-wrapper">
-      <table>
-        <thead>
-          <tr>
-            <th style="width:20%;">项目名称</th>
-            <th style="width:7%;">采购类型</th>
-            <th style="width:11%;">当前环节</th>
-            <th style="width:15%;">进度</th>
-            <th style="width:12%;">预估结束</th>
-            <th style="width:7%;">创建人</th>
-            <th style="width:9%;">创建时间</th>
-            <th style="width:9%;">操作</th>
-          </tr>
-        </thead>
-        <tbody id="projectTableBody"></tbody>
-      </table>
-    </div>
-  </div>
-
-  <!-- ==================== 采购类型管理页 ==================== -->
-  <div class="page" id="pageAdmin"></div>
-
-  <!-- ==================== 项目详情页 ==================== -->
-  <div class="page" id="pageDetail"></div>
-
-</div>
-
-<!-- ==================== 创建项目模态框 ==================== -->
-<div class="modal-overlay" id="createModal">
-  <div class="modal">
-    <h3>📝 创建新项目</h3>
-    <div class="form-group">
-      <label>项目名称 *</label>
-      <input type="text" id="newProjectName" placeholder="请输入项目名称">
-    </div>
-    <div class="form-group">
-      <label>采购类型 *</label>
-      <select id="newProjectType" onchange="onTypeChange()">
-        <option value="">请选择采购类型</option>
-        <option value="考察评估">考察评估</option>
-        <option value="单一来源采购">单一来源采购</option>
-      </select>
-    </div>
-    <div class="form-group" id="stagePreview" style="display:none;">
-      <label>环节预览</label>
-      <div id="stagePreviewContent" style="font-size:12px;color:#666;max-height:200px;overflow-y:auto;"></div>
-    </div>
-    <div class="modal-actions">
-      <button class="btn btn-outline" onclick="closeCreateModal()">取消</button>
-      <button class="btn btn-primary" onclick="createProject()">确认创建</button>
-    </div>
-  </div>
-</div>
-
-<!-- ==================== 分享项目模态框 ==================== -->
-<div class="modal-overlay" id="shareModal">
-  <div class="modal">
-    <h3>🔗 分享项目</h3>
-    <div class="form-group">
-      <label>分享给谁</label>
-      <select id="shareToUser">
-        <option value="">请选择用户</option>
-      </select>
-    </div>
-    <div class="form-group">
-      <label>权限级别</label>
-      <select id="sharePermission">
-        <option value="view">👁️ 查看（只能查看项目进展）</option>
-        <option value="edit">✏️ 编辑（可以标记环节状态）</option>
-      </select>
-    </div>
-    <div class="modal-actions">
-      <button class="btn btn-outline" onclick="closeShareModal()">取消</button>
-      <button class="btn btn-primary" onclick="doShare()">确认分享</button>
-    </div>
-  </div>
-</div>
-
-<script>
-// ==================== 全局状态 ====================
-let currentUser = '张三';
-let currentProjectId = null;
-
-// ==================== 角色切换 ====================
-function switchRole() {
-  currentUser = document.getElementById('roleSelect').value;
-  if (currentProjectId) {
-    loadProjectDetail(currentProjectId);
-  } else {
-    loadDashboard();
-  }
-}
-
-// ==================== API 封装 ====================
-async function api(url, options = {}) {
-  const separator = url.includes('?') ? '&' : '?';
-  const fullUrl = `${url}${separator}user=${encodeURIComponent(currentUser)}`;
-  const res = await fetch(fullUrl, { headers: { 'Content-Type': 'application/json' }, ...options });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({ error: '请求失败' }));
-    throw new Error(err.error || '请求失败');
-  }
-  return res.json();
-}
-
-// ==================== 仪表盘 ====================
-async function loadDashboard() {
-  document.getElementById('pageDashboard').classList.add('active');
-  document.getElementById('pageDetail').classList.remove('active');
-  document.getElementById('pageDetail').innerHTML = '';
-  document.getElementById('pageAdmin').classList.remove('active');
-  document.getElementById('pageAdmin').innerHTML = '';
-  currentProjectId = null;
-  await Promise.all([loadStats(), loadProjects()]);
-}
-
-function showAdminPage() {
-  document.getElementById('pageDashboard').classList.remove('active');
-  document.getElementById('pageDetail').classList.remove('active');
-  document.getElementById('pageDetail').innerHTML = '';
-  document.getElementById('pageAdmin').classList.add('active');
-  currentProjectId = null;
-  loadTemplateManager();
-}
-
-async function loadStats() {
-  try {
-    const stats = await api('/api/stats');
-    document.getElementById('statsRow').innerHTML = `
-      <div class="stat-card total">
-        <div class="stat-value">${stats.totalProjects}</div>
-        <div class="stat-label">我的项目总数</div>
-      </div>
-      <div class="stat-card progress">
-        <div class="stat-value">${stats.inProgressProjects}</div>
-        <div class="stat-label">进行中项目</div>
-      </div>
-      <div class="stat-card done">
-        <div class="stat-value">${stats.completedProjects}</div>
-        <div class="stat-label">已完成项目</div>
-      </div>
-      ${stats.typeStats.map(t => `
-        <div class="stat-card total" style="border-left-color:#6366f1;">
-          <div class="stat-value" style="color:#6366f1;">${t.count}</div>
-          <div class="stat-label">${t.procurement_type}</div>
-        </div>
-      `).join('')}
-    `;
-
-    // 加载采购类型筛选器选项
-    const types = await api('/api/procurement-types');
-    const filterType = document.getElementById('filterType');
-    filterType.innerHTML = '<option value="">全部类型</option>' +
-      types.map(t => `<option value="${t}">${t}</option>`).join('');
-
-    // 管理员可见管理按钮
-    document.getElementById('btnAdmin').style.display = (currentUser === '爱丽丝') ? '' : 'none';
-  } catch(e) { console.error(e); }
-}
-
-async function loadProjects() {
-  const typeFilter = document.getElementById('filterType').value;
-  const searchFilter = document.getElementById('filterSearch').value.toLowerCase();
-
-  try {
-    let projects = await api('/api/projects');
-
-    // 类型筛选
-    if (typeFilter) {
-      projects = projects.filter(p => p.procurement_type === typeFilter);
-    }
-    // 搜索筛选
-    if (searchFilter) {
-      projects = projects.filter(p => p.name.toLowerCase().includes(searchFilter));
-    }
-
-    const tbody = document.getElementById('projectTableBody');
-
-    if (projects.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="9"><div class="empty-state"><div class="icon">📭</div><p>暂无项目，点击"创建项目"开始</p></div></td></tr>`;
-      return;
-    }
-
-    tbody.innerHTML = projects.map((p, i) => {
-      // 使用API返回的 current_stage_name 和 estimated_end_date
-      const currentStageName = p.current_stage_name || '全部完成';
-      const progress = p.total_stages > 0 ? Math.round(p.completed_stages / p.total_stages * 100) : 0;
-      const typeBadge = p.procurement_type === '考察评估' ? 'badge-kaocha' : 'badge-danyi';
-      const createdAt = new Date(p.created_at).toLocaleDateString('zh-CN');
-
-      // 预估结束时间
-      let estDateHtml = '';
-      if (p.completed_stages === p.total_stages && p.total_stages > 0) {
-        estDateHtml = '<span class="est-date done">✅ 已完成</span>';
-      } else if (p.estimated_end_date) {
-        const estDate = new Date(p.estimated_end_date);
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const daysLeft = Math.ceil((estDate - today) / (1000 * 60 * 60 * 24));
-        estDateHtml = `<span class="est-date">📅 ${p.estimated_end_date} <small style="color:#999;">余${daysLeft}天</small></span>`;
-      } else {
-        estDateHtml = '<span style="color:#999;font-size:12px;">--</span>';
-      }
-
-      // 访问级别标签
-      let accessTag = '';
-      if (p.access_type === 'owner') {
-        accessTag = '<span class="access-tag owner">👑 我的</span>';
-      } else if (p.access_type === 'edit') {
-        accessTag = '<span class="access-tag shared-edit">🔗 共享·编辑</span>';
-      } else if (p.access_type === 'view') {
-        accessTag = '<span class="access-tag shared-view">👁️ 共享·查看</span>';
-      }
-
-      return `
-        <tr onclick="viewProject(${p.id})" title="点击查看详情">
-          <td><strong>${escapeHtml(p.name)}</strong> ${accessTag}</td>
-          <td><span class="badge ${typeBadge}">${p.procurement_type}</span></td>
-          <td style="font-size:13px;color:#666;">${currentStageName}</td>
-          <td>
-            <div class="progress-bar-wrap">
-              <div class="progress-bar"><div class="progress-bar-fill" style="width:${progress}%"></div></div>
-              <span class="progress-text">${p.completed_stages}/${p.total_stages}</span>
+    <!-- 顶部导航 -->
+    <header>
+        <div class="header-container">
+            <div class="logo-section">
+                <span class="logo-icon">⭐</span>
+                <h1 class="logo-title">安可的打卡</h1>
             </div>
-          </td>
-          <td>${estDateHtml}</td>
-          <td>${escapeHtml(p.created_by)}</td>
-          <td style="font-size:13px;color:#999;">${createdAt}</td>
-          <td>
-            <button class="btn btn-xs btn-outline" onclick="event.stopPropagation();viewProject(${p.id})">详情</button>
-            ${p.access_type === 'owner' ? `<button class="btn btn-xs btn-danger" onclick="event.stopPropagation();deleteProject(${p.id}, '${escapeHtml(p.name)}')">删除</button>` : ''}
-          </td>
-        </tr>
-      `;
-    }).join('');
-  } catch(e) {
-    console.error(e);
-    document.getElementById('projectTableBody').innerHTML = `<tr><td colspan="9"><div class="empty-state"><p style="color:#ef4444;">加载失败: ${e.message}</p></div></td></tr>`;
-  }
-}
-
-// ==================== 项目详情 ====================
-async function viewProject(id) {
-  currentProjectId = id;
-  document.getElementById('pageDashboard').classList.remove('active');
-  document.getElementById('pageDetail').classList.add('active');
-
-  try {
-    const project = await api(`/api/projects/${id}`);
-    renderProjectDetail(project);
-  } catch(e) {
-    document.getElementById('pageDetail').innerHTML = `<p style="color:red;padding:40px;text-align:center;">${e.message}<br><br><button class="btn btn-outline btn-sm" onclick="loadDashboard()">← 返回列表</button></p>`;
-  }
-}
-
-function renderProjectDetail(project) {
-  const typeBadge = project.procurement_type === '考察评估' ? 'badge-kaocha' : 'badge-danyi';
-  const createdAt = new Date(project.created_at).toLocaleDateString('zh-CN');
-
-  // 权限判断：使用后端返回的 userPermission
-  const canEditProject = project.userPermission === 'edit';
-
-  let stagesHtml = project.stages.map((stage, idx) => {
-    const isCompleted = stage.status === 'completed';
-    const isCurrent = !isCompleted && (idx === 0 || project.stages[idx - 1].status === 'completed');
-    const dotClass = isCompleted ? 'completed' : (isCurrent ? 'current' : '');
-    const lineClass = isCompleted ? 'completed' : '';
-
-    let durationClass = 'done';
-    if (!isCompleted) {
-      if (stage.durationDays <= 3) durationClass = 'fast';
-      else if (stage.durationDays <= 10) durationClass = 'medium';
-      else durationClass = 'long';
-    }
-
-    const canComplete = canEditProject && !isCompleted && isCurrent;
-    const canReset = canEditProject && isCompleted && idx > 0;
-
-    return `
-      <div class="timeline-item">
-        <div class="timeline-marker">
-          <div class="timeline-dot ${dotClass}"></div>
-          <div class="timeline-line ${lineClass}"></div>
-        </div>
-        <div class="timeline-content">
-          <div class="timeline-title">
-            <span>${stage.order}. ${stage.name}</span>
-            <span class="timeline-duration ${durationClass}">${stage.duration}</span>
-            ${isCompleted ? '<span class="completed-badge">✅ 已完成</span>' : (!isCurrent ? '<span class="pending-badge">⏳ 等待前置环节</span>' : '<span class="pending-badge" style="color:#e94560;">📍 当前环节</span>')}
-          </div>
-          ${stage.note ? `<div class="timeline-note">💡 ${stage.note}</div>` : ''}
-          ${isCompleted && stage.completed_at ? `<div class="timeline-note">完成时间: ${new Date(stage.completed_at).toLocaleString('zh-CN')}</div>` : ''}
-          <div class="timeline-actions">
-            ${canComplete ? `<button class="btn btn-xs btn-success" onclick="completeStage(${project.id}, ${stage.order})">✅ 标记完成</button>` : ''}
-            ${canReset ? `<button class="btn btn-xs btn-outline" onclick="resetStage(${project.id}, ${stage.order})">↩ 重置</button>` : ''}
-          </div>
-        </div>
-      </div>
-    `;
-  }).join('');
-
-  const remainingText = project.remainingDays === 0 ? '全部完成' : `约${project.remainingDays}天`;
-  const estEndText = project.estimatedEndDate 
-    ? `${project.estimatedEndDate} (剩余${project.remainingDays}天)` 
-    : (project.remainingDays === 0 ? '已全部完成' : '--');
-
-  // 权限标识
-  let permissionLabel = '';
-  if (project.isOwner) {
-    permissionLabel = '<span class="access-tag owner" style="font-size:12px;">👑 项目创建者 · 完全控制</span>';
-  } else if (project.userPermission === 'edit') {
-    permissionLabel = '<span class="access-tag shared-edit" style="font-size:12px;">🔗 共享编辑权限</span>';
-  } else if (project.userPermission === 'view') {
-    permissionLabel = '<span class="access-tag shared-view" style="font-size:12px;">👁️ 仅查看权限</span>';
-  }
-
-  // 分享列表
-  let shareSectionHtml = '';
-  if (project.isOwner || currentUser === '爱丽丝') {
-    const shareItems = (project.shares || []).map(s => `
-      <div class="share-item">
-        <div class="share-item-info">
-          <span style="font-weight:600;">${escapeHtml(s.shared_with)}</span>
-          <span class="share-permission-badge ${s.permission}">${s.permission === 'edit' ? '✏️ 编辑' : '👁️ 查看'}</span>
-        </div>
-        <div style="display:flex;gap:8px;">
-          <button class="btn btn-xs btn-outline" onclick="changeSharePerm(${project.id}, ${s.id}, '${s.permission}')">🔄 切换权限</button>
-          <button class="btn btn-xs btn-danger" onclick="removeShare(${project.id}, ${s.id}, '${escapeHtml(s.shared_with)}')">✕ 取消分享</button>
-        </div>
-      </div>
-    `).join('');
-
-    shareSectionHtml = `
-      <div class="share-section">
-        <h3>🔗 项目分享
-          <button class="btn btn-sm btn-primary" onclick="openShareModal(${project.id})" style="margin-left:12px;">+ 分享给用户</button>
-        </h3>
-        <div class="share-list">
-          ${shareItems || '<div class="share-empty">暂未分享给其他用户</div>'}
-        </div>
-      </div>
-    `;
-  }
-
-  document.getElementById('pageDetail').innerHTML = `
-    <div class="detail-header">
-      <button class="btn btn-back btn-sm" onclick="loadDashboard()">← 返回列表</button>
-      <div style="display:flex;align-items:center;gap:12px;">
-        <h2>${escapeHtml(project.name)}</h2>
-        ${permissionLabel}
-      </div>
-      <div class="detail-meta">
-        <span class="badge ${typeBadge}">${project.procurement_type}</span>
-        <span class="detail-meta-item">创建人: <strong>${escapeHtml(project.created_by)}</strong></span>
-        <span class="detail-meta-item">创建时间: ${createdAt}</span>
-      </div>
-    </div>
-
-    <div class="detail-summary" style="margin-bottom:24px;">
-      <div class="summary-card">
-        <div class="num blue">${project.progress}%</div>
-        <div class="lbl">总体进度</div>
-      </div>
-      <div class="summary-card">
-        <div class="num green">${project.completedStages}/${project.totalStages}</div>
-        <div class="lbl">已完成环节</div>
-      </div>
-      <div class="summary-card">
-        <div class="num orange">${remainingText}</div>
-        <div class="lbl">剩余预估时间</div>
-      </div>
-      <div class="summary-card">
-        <div class="num orange" style="font-size:15px;font-weight:600;">${estEndText}</div>
-        <div class="lbl">预估结束日期</div>
-      </div>
-      ${project.currentStage ? `
-      <div class="summary-card" style="border: 1px dashed #e94560;">
-        <div class="num orange" style="font-size:14px;font-weight:600;">${project.currentStage.name}</div>
-        <div class="lbl">当前环节</div>
-      </div>
-      ` : `
-      <div class="summary-card" style="border: 1px dashed #10b981;">
-        <div class="num green" style="font-size:14px;font-weight:600;">全部完成 🎉</div>
-        <div class="lbl">当前环节</div>
-      </div>
-      `}
-    </div>
-
-    ${!canEditProject && project.userPermission === 'view' ? `
-    <div style="background:#fff3cd;border:1px solid #ffc107;border-radius:8px;padding:10px 16px;margin-bottom:16px;font-size:13px;color:#856404;">
-      ⚠️ 您仅有<strong>查看权限</strong>，无法编辑项目环节。如需编辑，请联系项目创建者重新分享为编辑权限。
-    </div>
-    ` : ''}
-
-    <div class="timeline">
-      <h3>📋 采购流程环节</h3>
-      ${stagesHtml}
-    </div>
-
-    ${shareSectionHtml}
-  `;
-}
-
-// ==================== 环节操作 ====================
-async function completeStage(projectId, stageOrder) {
-  try {
-    await api(`/api/projects/${projectId}/stages/${stageOrder}/complete`, { method: 'POST' });
-    await loadProjectDetail(projectId);
-  } catch(e) {
-    alert('操作失败: ' + e.message);
-  }
-}
-
-async function resetStage(projectId, stageOrder) {
-  if (!confirm(`确定要重置第 ${stageOrder} 个环节吗？`)) return;
-  try {
-    await api(`/api/projects/${projectId}/stages/${stageOrder}/reset`, { method: 'POST' });
-    await loadProjectDetail(projectId);
-  } catch(e) {
-    alert('操作失败: ' + e.message);
-  }
-}
-
-async function loadProjectDetail(id) {
-  try {
-    const project = await api(`/api/projects/${id}`);
-    renderProjectDetail(project);
-  } catch(e) {
-    document.getElementById('pageDetail').innerHTML = `<p style="color:red;padding:40px;text-align:center;">${e.message}<br><br><button class="btn btn-outline btn-sm" onclick="loadDashboard()">← 返回列表</button></p>`;
-  }
-}
-
-// ==================== 分享管理 ====================
-let shareProjectId = null;
-
-async function openShareModal(projectId) {
-  shareProjectId = projectId;
-  document.getElementById('shareModal').classList.add('active');
-
-  try {
-    // 加载可分享的用户列表
-    const users = await api('/api/users');
-    const project = await api(`/api/projects/${projectId}`);
-    const projectOwner = project.created_by;
-
-    // 排除项目创建者和已分享的用户
-    const sharedWiths = new Set((project.shares || []).concat([{shared_with: projectOwner}]).map(s => s.shared_with));
-    const availableUsers = users.filter(u => u !== currentUser && !sharedWiths.has(u));
-
-    const select = document.getElementById('shareToUser');
-    select.innerHTML = '<option value="">请选择用户</option>' +
-      availableUsers.map(u => `<option value="${u}">${u}</option>`).join('');
-
-    if (availableUsers.length === 0) {
-      select.innerHTML = '<option value="">没有可分享的用户</option>';
-    }
-
-    document.getElementById('sharePermission').value = 'view';
-  } catch(e) {
-    alert('加载用户列表失败: ' + e.message);
-  }
-}
-
-function closeShareModal() {
-  document.getElementById('shareModal').classList.remove('active');
-  shareProjectId = null;
-}
-
-async function doShare() {
-  const sharedWith = document.getElementById('shareToUser').value;
-  const permission = document.getElementById('sharePermission').value;
-
-  if (!sharedWith) { alert('请选择分享对象'); return; }
-
-  try {
-    await api(`/api/projects/${shareProjectId}/share`, {
-      method: 'POST',
-      body: JSON.stringify({ shared_with: sharedWith, permission })
-    });
-    closeShareModal();
-    await loadProjectDetail(shareProjectId);
-  } catch(e) {
-    alert('分享失败: ' + e.message);
-  }
-}
-
-async function removeShare(projectId, shareId, userName) {
-  if (!confirm(`确定取消对"${userName}"的分享吗？`)) return;
-  try {
-    await api(`/api/projects/${projectId}/share/${shareId}`, { method: 'DELETE' });
-    await loadProjectDetail(projectId);
-  } catch(e) {
-    alert('操作失败: ' + e.message);
-  }
-}
-
-async function changeSharePerm(projectId, shareId, currentPerm) {
-  const newPerm = currentPerm === 'view' ? 'edit' : 'view';
-  const label = newPerm === 'edit' ? '编辑' : '查看';
-  if (!confirm(`确认将权限切换为"${label}"吗？`)) return;
-  try {
-    await api(`/api/projects/${projectId}/share/${shareId}`, {
-      method: 'PUT',
-      body: JSON.stringify({ permission: newPerm })
-    });
-    await loadProjectDetail(projectId);
-  } catch(e) {
-    alert('操作失败: ' + e.message);
-  }
-}
-
-// ==================== 创建项目 ====================
-async function openCreateModal() {
-  document.getElementById('createModal').classList.add('active');
-  document.getElementById('newProjectName').value = '';
-  document.getElementById('stagePreview').style.display = 'none';
-
-  // 动态加载采购类型选项
-  try {
-    const types = await api('/api/procurement-types');
-    const select = document.getElementById('newProjectType');
-    select.innerHTML = '<option value="">请选择采购类型</option>' +
-      types.map(t => `<option value="${t}">${t}</option>`).join('');
-    select.value = '';
-  } catch(e) {
-    console.error(e);
-  }
-}
-
-function closeCreateModal() {
-  document.getElementById('createModal').classList.remove('active');
-}
-
-async function onTypeChange() {
-  const type = document.getElementById('newProjectType').value;
-  const preview = document.getElementById('stagePreview');
-  const content = document.getElementById('stagePreviewContent');
-
-  if (!type) {
-    preview.style.display = 'none';
-    return;
-  }
-
-  try {
-    const stages = await api(`/api/stage-template/${encodeURIComponent(type)}`);
-    preview.style.display = 'block';
-    content.innerHTML = stages.map((s, i) =>
-      `<div style="padding:3px 0;">${s.order}. ${s.name} <span style="color:#999;">(${s.duration})</span></div>`
-    ).join('');
-  } catch(e) {
-    preview.style.display = 'none';
-  }
-}
-
-async function createProject() {
-  const name = document.getElementById('newProjectName').value.trim();
-  const type = document.getElementById('newProjectType').value;
-
-  if (!name) { alert('请输入项目名称'); return; }
-  if (!type) { alert('请选择采购类型'); return; }
-
-  try {
-    await api('/api/projects', {
-      method: 'POST',
-      body: JSON.stringify({ name, procurement_type: type, created_by: currentUser })
-    });
-    closeCreateModal();
-    await loadDashboard();
-  } catch(e) {
-    alert('创建失败: ' + e.message);
-  }
-}
-
-// ==================== 删除项目 ====================
-async function deleteProject(id, name) {
-  if (!confirm(`确定要删除项目 "${name}" 吗？此操作不可恢复。`)) return;
-  try {
-    await api(`/api/projects/${id}`, { method: 'DELETE' });
-    await loadDashboard();
-  } catch(e) {
-    alert('删除失败: ' + e.message);
-  }
-}
-
-// ==================== 采购类型模板管理（管理员） ====================
-let editingTemplateId = null;
-let editingStages = [];
-
-async function loadTemplateManager() {
-  try {
-    const templates = await api('/api/admin/templates');
-    document.getElementById('pageAdmin').innerHTML = `
-      <div class="admin-page">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;">
-          <div>
-            <h2>⚙️ 采购类型管理</h2>
-            <p class="subtitle">管理采购类型及对应的流程环节、预估时长和注意事项。更新后仅对新创建的项目生效，存量项目不受影响。</p>
-          </div>
-          <div style="display:flex;gap:10px;">
-            <button class="btn btn-outline btn-sm" onclick="loadDashboard()">← 返回项目列表</button>
-            <button class="btn btn-primary" onclick="openAddTypeModal()">+ 新增采购类型</button>
-          </div>
-        </div>
-        ${templates.length === 0 ? '<div class="empty-state"><p>暂无采购类型模板</p></div>' : ''}
-        ${templates.map(t => `
-          <div class="type-card">
-            <div class="type-card-header">
-              <h3>📋 ${escapeHtml(t.name)} <span style="font-size:12px;color:#999;font-weight:400;">(${t.stages.length}个环节)</span></h3>
-              <div style="display:flex;gap:8px;">
-                <button class="btn btn-outline btn-sm" onclick="editTemplate(${t.id}, '${escapeHtml(t.name)}')">✏️ 编辑</button>
-                <button class="btn btn-sm btn-danger" onclick="deleteTemplate(${t.id}, '${escapeHtml(t.name)}')">🗑 删除</button>
-              </div>
+            <div class="header-buttons">
+                <div id="parentInfo" style="display: none;">
+                    <span class="welcome-text">欢迎，<span id="parentName"></span> 👋</span>
+                </div>
+                <button id="manageTasksBtn" class="btn">
+                    ⚙️
+                    <span class="btn-text">任务管理</span>
+                </button>
+                <button id="changeParentBtn" class="btn">
+                    👤
+                    <span class="btn-text">切换身份</span>
+                </button>
             </div>
-            <table class="stage-editor-table" style="pointer-events:none;">
-              <thead>
-                <tr><th class="order-col">#</th><th class="name-col">环节名称</th><th class="duration-col">预估天数</th><th class="label-col">时长标签</th><th class="note-col">注意事项</th></tr>
-              </thead>
-              <tbody>
-                ${t.stages.map(s => `
-                  <tr>
-                    <td class="order-col">${s.stage_order}</td>
-                    <td>${escapeHtml(s.name)}</td>
-                    <td class="duration-col">${s.duration_days}天</td>
-                    <td class="label-col">${escapeHtml(s.duration_label)}</td>
-                    <td class="note-col" style="color:#888;font-size:12px;">${escapeHtml(s.note || '')}</td>
-                  </tr>
-                `).join('')}
-              </tbody>
-            </table>
-          </div>
-        `).join('')}
-      </div>
-    `;
-  } catch(e) {
-    document.getElementById('pageAdmin').innerHTML = `<p style="color:red;padding:40px;text-align:center;">加载失败: ${e.message}</p>`;
-  }
-}
+        </div>
+    </header>
 
-function openAddTypeModal() {
-  editingTemplateId = null;
-  editingStages = [{ name: '立项流程', duration_days: 0, duration_label: '已完成', note: '已完成' }];
-  renderTemplateModal('新增采购类型');
-}
+    <!-- 主要内容 -->
+    <main class="main-container">
+        <!-- 欢迎信息 -->
+        <div id="welcomeSection">
+            <div class="welcome-card">
+                <div class="welcome-icon">⭐</div>
+                <h2 class="welcome-title">欢迎来到安可的打卡</h2>
+                <p class="welcome-desc">请家长选择您的身份，和安可一起完成学习小目标吧</p>
 
-async function editTemplate(id, name) {
-  try {
-    const template = await api(`/api/admin/templates/${id}`);
-    editingTemplateId = id;
-    editingStages = template.stages.map(s => ({
-      name: s.name,
-      duration_days: s.duration_days,
-      duration_label: s.duration_label,
-      note: s.note || ''
-    }));
-    renderTemplateModal('编辑采购类型', template.name);
-  } catch(e) {
-    alert('加载模板失败: ' + e.message);
-  }
-}
+                <div class="parent-grid">
+                    <button onclick="selectParent('爸爸')" class="parent-btn dad">
+                        <div class="parent-icon">👨</div>
+                        <div>爸爸</div>
+                    </button>
+                    <button onclick="selectParent('妈妈')" class="parent-btn mom">
+                        <div class="parent-icon">👩</div>
+                        <div>妈妈</div>
+                    </button>
+                    <button onclick="selectParent('爷爷')" class="parent-btn grandpa">
+                        <div class="parent-icon">👴</div>
+                        <div>爷爷</div>
+                    </button>
+                    <button onclick="selectParent('奶奶')" class="parent-btn grandma">
+                        <div class="parent-icon">👵</div>
+                        <div>奶奶</div>
+                    </button>
+                    <button onclick="selectParent('外公')" class="parent-btn gonggong">
+                        <div class="parent-icon">👴</div>
+                        <div>外公</div>
+                    </button>
+                    <button onclick="selectParent('外婆')" class="parent-btn laolao">
+                        <div class="parent-icon">👵</div>
+                        <div>外婆</div>
+                    </button>
+                </div>
+            </div>
+        </div>
 
-function renderTemplateModal(title, typeName) {
-  // 移除已有模态框
-  const existing = document.querySelector('.template-modal-overlay');
-  if (existing) existing.remove();
+        <!-- 主界面 -->
+        <div id="dashboardSection" class="hidden">
+            <!-- 视图切换 -->
+            <div class="view-header">
+                <div class="view-tabs">
+                    <button class="view-btn active" data-view="tasks">
+                        ✅ 今日打卡
+                    </button>
+                    <button class="view-btn" data-view="calendar">
+                        📅 历史记录
+                    </button>
+                    <button class="view-btn" data-view="stats">
+                        📊 学习统计
+                    </button>
+                </div>
+                <button id="shareBtn" class="share-btn">
+                    🔗 分享报告
+                </button>
+            </div>
 
-  const overlay = document.createElement('div');
-  overlay.className = 'modal-overlay active template-modal-overlay';
-  overlay.innerHTML = `
-    <div class="modal" style="max-width:900px;max-height:90vh;overflow-y:auto;">
-      <h3>📋 ${title}</h3>
-      <div class="form-group">
-        <label>采购类型名称 *</label>
-        <input type="text" id="templateTypeName" value="${escapeHtml(typeName || '')}" placeholder="如：考察评估、单一来源采购">
-      </div>
-      <div class="form-group">
-        <label>流程环节
-          <button class="btn btn-xs btn-primary" onclick="addStage()" style="margin-left:12px;">+ 添加环节</button>
-        </label>
-      </div>
-      <table class="stage-editor-table" style="margin-bottom:8px;">
-        <thead>
-          <tr><th class="order-col">#</th><th class="name-col">环节名称</th><th class="duration-col">预估天数</th><th class="label-col">时长标签</th><th class="note-col">注意事项</th><th class="action-col"></th></tr>
-        </thead>
-        <tbody id="templateStagesBody"></tbody>
-      </table>
-      <div class="modal-actions">
-        <button class="btn btn-outline" onclick="closeTemplateModal()">取消</button>
-        <button class="btn btn-primary" onclick="saveTemplate()">保存模板</button>
-      </div>
+            <!-- 任务分类标签 -->
+            <div id="categoryFilter" class="category-tabs">
+                <button class="category-btn active">全部任务</button>
+                <button class="category-btn">拼音</button>
+                <button class="category-btn">古诗词</button>
+                <button class="category-btn">文言文</button>
+                <button class="category-btn">数学</button>
+                <button class="category-btn">英文阅读</button>
+                <button class="category-btn">分级阅读</button>
+                <button class="category-btn">迪士尼英语</button>
+                <button class="category-btn">听力训练</button>
+            </div>
+
+            <!-- 今日打卡视图 -->
+            <div id="taskList">
+                <!-- 任务卡片会通过JS动态生成 -->
+            </div>
+
+            <!-- 日历视图 -->
+            <div id="calendarView" class="hidden">
+                <div class="calendar-container">
+                    <div class="calendar-header">
+                        <button id="prevMonth" class="calendar-nav">‹</button>
+                        <h3 id="currentMonth" class="calendar-title">2026年8月</h3>
+                        <button id="nextMonth" class="calendar-nav">›</button>
+                    </div>
+                    <div class="calendar-weekdays">
+                        <div class="weekday">日</div>
+                        <div class="weekday">一</div>
+                        <div class="weekday">二</div>
+                        <div class="weekday">三</div>
+                        <div class="weekday">四</div>
+                        <div class="weekday">五</div>
+                        <div class="weekday">六</div>
+                    </div>
+                    <div id="calendarGrid" class="calendar-grid">
+                        <!-- 日历格子动态生成 -->
+                    </div>
+                </div>
+
+                <div class="day-tasks-container">
+                    <h3 class="day-title" id="selectedDateTitle">请选择日期查看打卡记录</h3>
+                    <div id="dayTaskList">
+                        <div class="empty-state">
+                            <div class="empty-icon">📅</div>
+                            <p>选择日期查看当天的打卡记录</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 统计视图 -->
+            <div id="statsView" class="hidden">
+                <div class="stats-container">
+                    <div class="stats-header">
+                        <h3 class="stats-title">学习统计</h3>
+                        <div class="stats-tabs">
+                            <button class="stats-tab-btn active">周统计</button>
+                            <button class="stats-tab-btn">月统计</button>
+                            <button class="stats-tab-btn">自定义</button>
+                        </div>
+                    </div>
+
+                    <div id="dateRangePicker" class="date-range-picker hidden">
+                        <div class="date-range-inputs">
+                            <input type="date" id="statsStartDate">
+                            <span>至</span>
+                            <input type="date" id="statsEndDate">
+                            <button class="query-btn" onclick="queryStatsByDateRange()">查询</button>
+                        </div>
+                    </div>
+
+                    <div class="stats-cards">
+                        <div class="stat-card blue">
+                            <div class="stat-icon blue">📋</div>
+                            <div class="stat-number blue" id="todayCount">0</div>
+                            <div class="stat-label">今日打卡数</div>
+                        </div>
+                        <div class="stat-card blue">
+                            <div class="stat-icon blue">⏱️</div>
+                            <div class="stat-number blue" id="todayDuration">0</div>
+                            <div class="stat-label">今日学习时长(分钟)</div>
+                        </div>
+                        <div class="stat-card green">
+                            <div class="stat-icon green">✅</div>
+                            <div class="stat-number green" id="weekCount">0</div>
+                            <div class="stat-label">本周打卡数</div>
+                        </div>
+                        <div class="stat-card green">
+                            <div class="stat-icon green">⏱️</div>
+                            <div class="stat-number green" id="weekDuration">0</div>
+                            <div class="stat-label">本周学习时长(分钟)</div>
+                        </div>
+                        <div class="stat-card purple">
+                            <div class="stat-icon purple">📈</div>
+                            <div class="stat-number purple" id="monthCount">0</div>
+                            <div class="stat-label">本月打卡数</div>
+                        </div>
+                        <div class="stat-card orange">
+                            <div class="stat-icon orange">🔥</div>
+                            <div class="stat-number orange" id="streakCount">0</div>
+                            <div class="stat-label">连续打卡天数</div>
+                        </div>
+                    </div>
+
+                    <!-- 自定义图表 -->
+                    <div class="chart-container">
+                        <div class="chart-header">
+                            <h3 class="chart-title" id="chartTitle" style="margin-bottom:0;">近7天打卡趋势</h3>
+                            <div class="chart-type-tabs">
+                                <button class="chart-type-btn active" data-chart="count">打卡次数</button>
+                                <button class="chart-type-btn" data-chart="duration">时长(分钟)</button>
+                            </div>
+                        </div>
+                        <svg class="chart-svg" id="statsChart" viewBox="0 0 600 200" preserveAspectRatio="xMidYMid meet">
+                            <defs>
+                                <linearGradient id="gradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                                    <stop offset="0%" style="stop-color:#4F46E5;stop-opacity:0.9" />
+                                    <stop offset="100%" style="stop-color:#818cf8;stop-opacity:0.7" />
+                                </linearGradient>
+                                <linearGradient id="gradientDuration" x1="0%" y1="0%" x2="0%" y2="100%">
+                                    <stop offset="0%" style="stop-color:#f97316;stop-opacity:0.9" />
+                                    <stop offset="100%" style="stop-color:#fbbf24;stop-opacity:0.7" />
+                                </linearGradient>
+                            </defs>
+                            <g id="chartBars"></g>
+                            <g id="chartLabels"></g>
+                            <g id="chartValues"></g>
+                        </svg>
+                    </div>
+                </div>
+
+                <div class="task-stats-container">
+                    <h3 class="task-stats-title">各任务打卡次数</h3>
+                    <div id="taskStatsList">
+                        <!-- 任务统计动态生成 -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 打卡备注弹窗 -->
+    <div id="checkinNoteModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">打卡备注</h3>
+                <button class="close-btn" onclick="closeNoteModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">学习时长（分钟）</label>
+                    <input type="number" id="checkinDuration" class="form-control" placeholder="请输入学习时长，比如20" min="1" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">学习情况说明（可选）</label>
+                    <textarea id="checkinNote" rows="3" class="form-control" placeholder="今天的学习收获、遇到的问题等"></textarea>
+                </div>
+                <div class="form-actions">
+                    <button class="btn-secondary" onclick="closeNoteModal()">取消</button>
+                    <button class="btn-green" onclick="confirmCheckin()">确认打卡</button>
+                </div>
+            </div>
+        </div>
     </div>
-  `;
-  document.body.appendChild(overlay);
-  renderStagesTable();
-  overlay.addEventListener('click', function(e) {
-    if (e.target === overlay) closeTemplateModal();
-  });
-}
 
-function renderStagesTable() {
-  const tbody = document.getElementById('templateStagesBody');
-  if (!tbody) return;
-  tbody.innerHTML = editingStages.map((s, i) => `
-    <tr>
-      <td class="order-col" style="color:#999;">${i + 1}</td>
-      <td class="name-col"><input type="text" value="${escapeHtml(s.name)}" onchange="updateStage(${i}, 'name', this.value)" placeholder="环节名称"></td>
-      <td class="duration-col"><input type="number" value="${s.duration_days}" onchange="updateStage(${i}, 'duration_days', parseInt(this.value)||0)" min="0" style="width:70px;"></td>
-      <td class="label-col"><input type="text" value="${escapeHtml(s.duration_label)}" onchange="updateStage(${i}, 'duration_label', this.value)" placeholder="如：1天"></td>
-      <td class="note-col"><input type="text" value="${escapeHtml(s.note || '')}" onchange="updateStage(${i}, 'note', this.value)" placeholder="注意事项"></td>
-      <td class="action-col"><button class="btn-icon danger" onclick="removeStage(${i})" title="删除">✕</button></td>
-    </tr>
-  `).join('');
-}
+    <!-- 任务管理弹窗 -->
+    <div id="taskManageModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="taskModalTitle">管理任务</h3>
+                <button class="close-btn" onclick="closeTaskManageModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <form id="taskForm" onsubmit="saveTask(event)">
+                    <input type="hidden" id="editTaskId">
 
-function updateStage(index, field, value) {
-  if (index >= 0 && index < editingStages.length) {
-    editingStages[index][field] = value;
-  }
-}
+                    <div class="form-group">
+                        <label class="form-label">任务分类</label>
+                        <select id="taskCategory" class="form-control">
+                            <option value="拼音">拼音</option>
+                            <option value="古诗词">古诗词</option>
+                            <option value="文言文">文言文</option>
+                            <option value="数学">数学</option>
+                            <option value="英文阅读">英文阅读</option>
+                            <option value="分级阅读">分级阅读</option>
+                            <option value="迪士尼英语">迪士尼英语</option>
+                            <option value="听力训练">听力训练</option>
+                            <option value="其他">其他</option>
+                        </select>
+                    </div>
 
-function addStage() {
-  editingStages.push({ name: '新环节', duration_days: 1, duration_label: '', note: '' });
-  renderStagesTable();
-}
+                    <div class="form-group">
+                        <label class="form-label">任务名称</label>
+                        <input type="text" id="taskName" class="form-control" placeholder="例如：摩比爱拼音" required>
+                    </div>
 
-function removeStage(index) {
-  if (editingStages.length <= 1) { alert('至少需要保留一个环节'); return; }
-  editingStages.splice(index, 1);
-  renderStagesTable();
-}
+                    <div class="form-group">
+                        <label class="form-label">打卡目标</label>
+                        <input type="text" id="taskTarget" class="form-control" placeholder="例如：每天1-2课" required>
+                    </div>
 
-function closeTemplateModal() {
-  const overlay = document.querySelector('.template-modal-overlay');
-  if (overlay) overlay.remove();
-  editingTemplateId = null;
-  editingStages = [];
-}
+                    <div class="form-group">
+                        <label class="form-label">图标类型</label>
+                        <select id="taskIcon" class="form-control">
+                            <option value="star">星星</option>
+                            <option value="book">书本</option>
+                            <option value="feather">羽毛笔</option>
+                            <option value="scroll">卷轴</option>
+                            <option value="calculator">计算器</option>
+                            <option value="language">语言</option>
+                            <option value="headphones">耳机</option>
+                            <option value="tv">电视</option>
+                            <option value="music">音乐</option>
+                            <option value="art">画画</option>
+                            <option value="sport">运动</option>
+                        </select>
+                    </div>
 
-async function saveTemplate() {
-  const nameInput = document.getElementById('templateTypeName');
-  const name = nameInput ? nameInput.value.trim() : '';
-  if (!name) { alert('请输入采购类型名称'); return; }
-  if (editingStages.length === 0) { alert('至少需要一个环节'); return; }
-  // 检查环节名称
-  for (let i = 0; i < editingStages.length; i++) {
-    if (!editingStages[i].name.trim()) { alert(`第${i + 1}个环节名称不能为空`); return; }
-  }
+                    <div class="form-group">
+                        <label class="form-label">颜色</label>
+                        <select id="taskColor" class="form-control">
+                            <option value="blue">蓝色</option>
+                            <option value="green">绿色</option>
+                            <option value="purple">紫色</option>
+                            <option value="orange">橙色</option>
+                            <option value="red">红色</option>
+                            <option value="indigo">靛蓝</option>
+                            <option value="pink">粉色</option>
+                            <option value="teal">青蓝</option>
+                            <option value="yellow">黄色</option>
+                        </select>
+                    </div>
 
-  const body = { name, stages: editingStages };
-  try {
-    if (editingTemplateId) {
-      await api(`/api/admin/templates/${editingTemplateId}`, { method: 'PUT', body: JSON.stringify(body) });
-    } else {
-      await api('/api/admin/templates', { method: 'POST', body: JSON.stringify(body) });
-    }
-    closeTemplateModal();
-    loadTemplateManager();
-    // 刷新列表页的筛选器和创建弹窗的下次加载
-  } catch(e) {
-    alert('保存失败: ' + e.message);
-  }
-}
+                    <div class="form-actions">
+                        <button type="button" id="deleteTaskBtn" class="btn-danger hidden" onclick="deleteCurrentTask()">
+                            🗑️ 删除任务
+                        </button>
+                        <button type="submit" class="btn-primary">
+                            💾 保存
+                        </button>
+                    </div>
+                </form>
 
-async function deleteTemplate(id, name) {
-  if (!confirm(`确定要删除采购类型"${name}"吗？\n注意：有历史项目使用该类型时不可删除。`)) return;
-  try {
-    await api(`/api/admin/templates/${id}`, { method: 'DELETE' });
-    loadTemplateManager();
-  } catch(e) {
-    alert('删除失败: ' + e.message);
-  }
-}
+                <hr class="hr">
 
-// ==================== 工具函数 ====================
-function escapeHtml(str) {
-  const div = document.createElement('div');
-  div.textContent = str;
-  return div.innerHTML;
-}
+                <div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                        <h4 style="font-weight: 600;">现有任务列表</h4>
+                        <button type="button" id="addNewTaskBtn" class="btn-primary" onclick="resetTaskForm()" style="font-size: 12px; padding: 6px 12px;">
+                            ➕ 新增任务
+                        </button>
+                    </div>
+                    <div id="existingTasksList" class="existing-tasks-list">
+                        <!-- 现有任务列表动态生成 -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-// ==================== 初始化 ====================
-loadDashboard();
+    <!-- 分享图片弹窗 -->
+    <div id="shareModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">分享学习报告</h3>
+                <button class="close-btn" onclick="closeShareModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="share-image-container">
+                    <img id="shareImage" class="share-image" src="" alt="学习报告">
+                </div>
+                <div class="share-actions">
+                    <button class="btn-secondary" onclick="closeShareModal()">取消</button>
+                    <button class="btn-primary" onclick="saveShareImage()">保存图片</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-// 点击模态框外部关闭
-['createModal', 'shareModal'].forEach(id => {
-  document.getElementById(id).addEventListener('click', function(e) {
-    if (e.target === this) {
-      if (id === 'createModal') closeCreateModal();
-      else closeShareModal();
-    }
-  });
-});
-</script>
-
+    <script src="app.js"></script>
 </body>
 </html>
