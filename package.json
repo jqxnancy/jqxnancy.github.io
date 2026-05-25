@@ -1,0 +1,23 @@
+{
+  "name": "procurement-project-assistant",
+  "version": "1.0.0",
+  "description": "采购项目助手 - 项目进度追踪工具",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "seed": "node seed.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.0.0",
+    "express": "^4.18.2"
+  },
+  "keywords": [
+    "procurement",
+    "project-management",
+    "progress-tracking"
+  ],
+  "license": "MIT"
+}

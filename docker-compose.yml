@@ -1,0 +1,12 @@
+services:
+  app:
+    build: .
+    container_name: procurement-assistant
+    ports:
+      - "${PORT:-3000}:3000"
+    volumes:
+      - ./data:/app/data
+    environment:
+      - DB_PATH=/app/data/projects.db
+      - NODE_ENV=production
+    restart: unless-stopped
