@@ -1,9 +1,9 @@
 // SVG图标库
 const ICONS = {
   book: `<svg class="icon-svg" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M4 19.5C4 18.837 4.26339 18.2507 4.75 17.75C5.98044 16.5196 7.94017 16 10.5 16C13.0598 16 15.0196 16.5196 16.25 17.75C16.7366 18.2507 17 18.837 17 19.5V20H4V19.5Z" fill="currentColor"/>
-    <path d="M19 19H17.9598C17.9864 18.8362 18 18.6697 18 18.5V12H19V19Z" fill="currentColor"/>
-    <path d="M19 10H18V6C18 4.89543 17.1046 4 16 4H9C7.89543 4 7 4.89543 7 6V10H4C3.44772 10 3 10.4477 3 11V20C3 20.5523 3.44772 21 4 21H19C19.5523 21 20 20.5523 20 20V11C20 10.4477 19.5523 10 19 10ZM9 6H16V10H9V6ZM5 19V12H7V15.5013C7 15.8953 6.83877 16.2688 6.5592 16.5484C6.20511 16.9025 5.61305 17 5 17V19ZM18 18.5C18 19.3284 17.3284 20 16.5 20C15.6716 20 15 19.3284 15 18.5C15 17.6716 15.6716 17 16.5 17C17.3284 17 18 17.6716 18 18.5Z" fill="currentColor"/>
+    <path d="M4.5 5.5C4.5 4.67 5.17 4 6 4H10.2C11.02 4 11.73 4.34 12 4.86C12.27 4.34 12.98 4 13.8 4H18C18.83 4 19.5 4.67 19.5 5.5V18.5C19.5 19.05 19.05 19.5 18.5 19.5H14.2C13.28 19.5 12.48 19.83 12 20.35C11.52 19.83 10.72 19.5 9.8 19.5H5.5C4.95 19.5 4.5 19.05 4.5 18.5V5.5Z" fill="currentColor" opacity="0.22"/>
+    <path d="M12 5.6V20.1M7.2 7.4H9.9M7.2 10.4H9.9M7.2 13.4H9.9M14.1 7.4H16.8M14.1 10.4H16.8M14.1 13.4H16.8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+    <path d="M5.5 5H10.2C11.2 5 12 5.8 12 6.8C12 5.8 12.8 5 13.8 5H18.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
   </svg>`,
   feather: `<svg class="icon-svg" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
     <path d="M17.3639 2.98887C17.3639 2.98887 18.0479 1.96287 19.4159 1.96287C20.4559 1.96287 21.7409 2.75887 21.9939 4.78187C22.2479 6.80687 20.7079 7.95987 20.7079 7.95987L7.64393 21.0229L2.95893 22.4189L4.35493 17.7339L17.3639 2.98887Z" fill="currentColor"/>
@@ -60,6 +60,7 @@ window.chartType = "count"; // count/duration
 window.currentEditingTask = null;
 window.currentCheckinTask = null;
 window.currentShareImageUrl = null;
+const DEFAULT_CHECKIN_DURATION = 20;
 // 颜色类映射
 const colorClassMap = {
   blue: "color-blue",
@@ -103,6 +104,7 @@ window.initApp = function() {
     }
     console.log("任务数量:", tasks.length);
     syncParentSelection();
+    updateCategoryTabs();
     if (currentParent) {
       var welcomeEl = document.getElementById("welcomeSection");
       var dashboardEl = document.getElementById("dashboardSection");
@@ -182,6 +184,10 @@ function bindEvents() {
     // 分享按钮
     const shareBtn = document.getElementById("shareBtn");
     if (shareBtn) shareBtn.addEventListener("click", generateShareReport);
+    const taskCategorySelect = document.getElementById("taskCategory");
+    if (taskCategorySelect) {
+      taskCategorySelect.addEventListener("change", toggleCustomCategoryInput);
+    }
     // 分类标签切换
     const categoryBtns = document.querySelectorAll(".category-btn");
     categoryBtns.forEach((btn) => {
@@ -250,7 +256,7 @@ function renderTaskCards() {
       return;
     }
     taskList.innerHTML = "";
-    const today = new Date().toISOString().split("T")[0];
+    const today = getLocalDateKey();
     console.log("今日日期:", today);
     console.log("所有任务:", tasks);
     // 如果没有任务，显示提示
@@ -298,12 +304,12 @@ function renderTaskCards() {
                 ${ICONS[task.icon] || ICONS.star}
               </div>
               <div>
-                <h4>${task.name}</h4>
-                <p class="task-target">🎯 ${task.target}</p>
+                <h4>${escapeHTML(task.name)}</h4>
+                <p class="task-target">🎯 ${escapeHTML(task.target)}</p>
                 ${isChecked ? `
                   <p class="task-meta">
-                    👤 ${checkinInfo.parent || "未知"} · ${formatTime(checkinInfo.time)} · ⏱️ ${checkinInfo.duration}分钟
-                    ${checkinInfo.note ? `<br>💬 ${checkinInfo.note}` : ""}
+                    👤 ${escapeHTML(checkinInfo.parent || "未知")} · ${formatTime(checkinInfo.time)} · ⏱️ ${checkinInfo.duration || DEFAULT_CHECKIN_DURATION}分钟
+                    ${checkinInfo.note ? `<br>💬 ${escapeHTML(checkinInfo.note)}` : ""}
                   </p>
                 ` : ""}
               </div>
@@ -348,7 +354,7 @@ window.openCheckinNote = function(taskId) {
     const durationEl = document.getElementById("checkinDuration");
     const noteEl = document.getElementById("checkinNote");
     const modalEl = document.getElementById("checkinNoteModal");
-    if (durationEl) durationEl.value = "";
+    if (durationEl) durationEl.value = String(DEFAULT_CHECKIN_DURATION);
     if (noteEl) noteEl.value = "";
     if (modalEl) modalEl.style.display = "flex";
   } catch (e) {
@@ -374,7 +380,7 @@ window.confirmCheckin = function() {
       showToast("请输入有效的学习时长（至少1分钟）", "error");
       return;
     }
-    const today = new Date().toISOString().split("T")[0];
+    const today = getLocalDateKey();
     const noteEl = document.getElementById("checkinNote");
     const note = noteEl ? noteEl.value.trim() : "";
     if (!checkinRecords[today]) {
@@ -401,7 +407,7 @@ window.confirmCheckin = function() {
 // 撤销打卡
 window.cancelCheckin = function(taskId) {
   try {
-    const today = new Date().toISOString().split("T")[0];
+    const today = getLocalDateKey();
     if (checkinRecords[today] && checkinRecords[today][taskId]) {
       delete checkinRecords[today][taskId];
       // 如果当天没有记录了，删除日期键
@@ -436,6 +442,15 @@ function updateCategoryTabs() {
     btn.textContent = category;
     categoryFilter.appendChild(btn);
   });
+  const addBtn = document.createElement("button");
+  addBtn.className = "category-add-btn";
+  addBtn.type = "button";
+  addBtn.textContent = "+ 新增类型";
+  addBtn.addEventListener("click", function() {
+    openTaskManageModal();
+    setCustomCategoryMode();
+  });
+  categoryFilter.appendChild(addBtn);
   categoryFilter.querySelectorAll(".category-btn").forEach((btn) => {
     btn.addEventListener("click", function() {
       categoryFilter.querySelectorAll(".category-btn").forEach(b => b.classList.remove("active"));
@@ -447,6 +462,7 @@ function updateCategoryTabs() {
 // 打开任务管理弹窗
 window.openTaskManageModal = function() {
   try {
+    populateTaskCategoryOptions();
     renderExistingTasksList();
     resetTaskForm();
     document.getElementById("taskManageModal").style.display = "flex";
@@ -468,6 +484,9 @@ window.resetTaskForm = function() {
   document.getElementById("taskName").value = "";
   document.getElementById("taskTarget").value = "";
   document.getElementById("taskCategory").value = "其他";
+  const customCategoryEl = document.getElementById("taskCategoryCustom");
+  if (customCategoryEl) customCategoryEl.value = "";
+  toggleCustomCategoryInput();
   document.getElementById("taskIcon").value = "star";
   document.getElementById("taskColor").value = "blue";
   document.getElementById("deleteTaskBtn").classList.add("hidden");
@@ -499,7 +518,7 @@ function renderExistingTasksList() {
           <span class="${colorClass}" style="width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
             ${(ICONS[task.icon] || ICONS.star).replace(/<svg[^>]+>/, '<svg width="18" height="18"').replace(/<\/svg>/, '</svg>')}
           </span>
-          <span style="font-size: 14px; color: #1f2937;">${task.name}</span>
+          <span style="font-size: 14px; color: #1f2937;">${escapeHTML(task.name)}</span>
         </div>
         <button style="background: none; border: none; color: #6b7280; cursor: pointer; padding: 4px;" onclick="editTask('${task.id}')">
           ✏️
@@ -516,16 +535,66 @@ function renderExistingTasksList() {
     `;
   }
 }
+// 填充任务分类选项，包含已有任务里的自定义类型
+function populateTaskCategoryOptions(selectedCategory = "其他") {
+  const select = document.getElementById("taskCategory");
+  if (!select) return;
+  const baseCategories = ["拼音", "古诗词", "文言文", "数学", "英文阅读", "分级阅读", "迪士尼英语", "听力训练", "其他"];
+  const categories = Array.from(new Set([
+    ...baseCategories,
+    ...tasks.map(task => task.category).filter(Boolean),
+    selectedCategory
+  ]));
+  select.innerHTML = "";
+  categories.forEach(category => {
+    if (!category || category === "__custom__") return;
+    const option = document.createElement("option");
+    option.value = category;
+    option.textContent = category;
+    select.appendChild(option);
+  });
+  const customOption = document.createElement("option");
+  customOption.value = "__custom__";
+  customOption.textContent = "新增任务类型...";
+  select.appendChild(customOption);
+  select.value = categories.includes(selectedCategory) ? selectedCategory : "其他";
+  toggleCustomCategoryInput();
+}
+
+function toggleCustomCategoryInput() {
+  const select = document.getElementById("taskCategory");
+  const input = document.getElementById("taskCategoryCustom");
+  if (!select || !input) return;
+  const isCustom = select.value === "__custom__";
+  input.classList.toggle("hidden", !isCustom);
+  if (isCustom) {
+    input.focus();
+  }
+}
+
+function setCustomCategoryMode() {
+  const select = document.getElementById("taskCategory");
+  const input = document.getElementById("taskCategoryCustom");
+  if (!select || !input) return;
+  select.value = "__custom__";
+  input.value = "";
+  toggleCustomCategoryInput();
+}
+
 // 编辑任务
 window.editTask = function(taskId) {
   const task = tasks.find(t => t.id === taskId);
   if (!task) return;
+  populateTaskCategoryOptions(task.category);
   currentEditingTask = taskId;
   document.getElementById("taskModalTitle").textContent = "编辑任务";
   document.getElementById("editTaskId").value = taskId;
   document.getElementById("taskName").value = task.name;
   document.getElementById("taskTarget").value = task.target;
   document.getElementById("taskCategory").value = task.category;
+  const customCategoryEl = document.getElementById("taskCategoryCustom");
+  if (customCategoryEl) customCategoryEl.value = "";
+  toggleCustomCategoryInput();
   document.getElementById("taskIcon").value = task.icon;
   document.getElementById("taskColor").value = task.color;
   document.getElementById("deleteTaskBtn").classList.remove("hidden");
@@ -538,14 +607,19 @@ window.editTask = function(taskId) {
 window.saveTask = function(event) {
   event.preventDefault();
   try {
+    const categorySelect = document.getElementById("taskCategory");
+    const customCategoryEl = document.getElementById("taskCategoryCustom");
+    const category = categorySelect.value === "__custom__"
+      ? (customCategoryEl ? customCategoryEl.value.trim() : "")
+      : categorySelect.value;
     const taskData = {
       name: document.getElementById("taskName").value.trim(),
       target: document.getElementById("taskTarget").value.trim(),
-      category: document.getElementById("taskCategory").value,
+      category,
       icon: document.getElementById("taskIcon").value,
       color: document.getElementById("taskColor").value
     };
-    if (!taskData.name || !taskData.target) {
+    if (!taskData.name || !taskData.target || !taskData.category) {
       showToast("请填写完整的任务信息", "error");
       return;
     }
@@ -567,6 +641,7 @@ window.saveTask = function(event) {
       resetTaskForm();
     }
     saveData();
+    populateTaskCategoryOptions(taskData.category);
     renderExistingTasksList();
     updateCategoryTabs();
     if (currentView === "tasks") {
@@ -623,7 +698,7 @@ function renderCalendar() {
   for (let i = 0; i < 42; i++) {
     const cellDate = new Date(startDate);
     cellDate.setDate(startDate.getDate() + i);
-    const dateStr = cellDate.toISOString().split("T")[0];
+    const dateStr = getLocalDateKey(cellDate);
     const isCurrentMonth = cellDate.getMonth() === month;
     const isToday = cellDate.getTime() === today.getTime();
     const isSelected = selectedDate && cellDate.toDateString() === selectedDate.toDateString();
@@ -673,7 +748,7 @@ function nextMonth() {
 }
 // 渲染当日任务
 function renderDayTasks(dateStr) {
-  const date = new Date(dateStr);
+  const date = parseLocalDate(dateStr);
   const formattedDate = `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日`;
   document.getElementById("selectedDateTitle").textContent = `${formattedDate} 打卡记录`;
   const dayTaskList = document.getElementById("dayTaskList");
@@ -700,10 +775,10 @@ function renderDayTasks(dateStr) {
           ${ICONS[task.icon] || ICONS.star}
         </div>
         <div class="day-task-info">
-          <h5>${task.name}</h5>
+          <h5>${escapeHTML(task.name)}</h5>
           <p class="day-task-meta">
-            👤 ${record.parent || "未知"} · ${formatTime(record.time)} · ⏱️ ${record.duration}分钟
-            ${record.note ? `<br>💬 ${record.note}` : ""}
+            👤 ${escapeHTML(record.parent || "未知")} · ${formatTime(record.time)} · ⏱️ ${record.duration || DEFAULT_CHECKIN_DURATION}分钟
+            ${record.note ? `<br>💬 ${escapeHTML(record.note)}` : ""}
           </p>
         </div>
       </div>
@@ -715,7 +790,7 @@ function renderDayTasks(dateStr) {
 // ==================== 统计功能 ====================
 // 渲染统计页面
 function renderStats() {
-  const today = new Date().toISOString().split("T")[0];
+  const today = getLocalDateKey();
   // 计算今日打卡数和时长
   const todayCount = checkinRecords[today] ? Object.keys(checkinRecords[today]).length : 0;
   const todayDuration = getTodayDuration();
@@ -755,7 +830,7 @@ function renderChart() {
       d.setDate(now.getDate() - i);
       const dayName = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'][d.getDay()];
       labels.push(dayName);
-      const dateStr = d.toISOString().split('T')[0];
+      const dateStr = getLocalDateKey(d);
       if (chartType === 'count') {
         const count = checkinRecords[dateStr] ? Object.keys(checkinRecords[dateStr]).length : 0;
         data.push(count);
@@ -781,7 +856,7 @@ function renderChart() {
         for (let d = 0; d < 7; d++) {
           const current = new Date(weekStart);
           current.setDate(weekStart.getDate() + d);
-          const dateStr = current.toISOString().split('T')[0];
+          const dateStr = getLocalDateKey(current);
           count += checkinRecords[dateStr] ? Object.keys(checkinRecords[dateStr]).length : 0;
         }
         data.push(count);
@@ -790,7 +865,7 @@ function renderChart() {
         for (let d = 0; d < 7; d++) {
           const current = new Date(weekStart);
           current.setDate(weekStart.getDate() + d);
-          const dateStr = current.toISOString().split('T')[0];
+            const dateStr = getLocalDateKey(current);
           if (checkinRecords[dateStr]) {
             Object.values(checkinRecords[dateStr]).forEach(record => {
               duration += record.duration || 0;
@@ -808,8 +883,8 @@ function renderChart() {
       document.getElementById('chartTitle').textContent = '请选择日期范围';
       return;
     }
-    const start = new Date(startDate);
-    const end = new Date(endDate);
+    const start = parseLocalDate(startDate);
+    const end = parseLocalDate(endDate);
     if (start > end) {
       document.getElementById('chartTitle').textContent = '开始日期不能晚于结束日期';
       return;
@@ -825,7 +900,7 @@ function renderChart() {
       const month = d.getMonth() + 1;
       const day = d.getDate();
       labels.push(`${month}/${day}`);
-      const dateStr = d.toISOString().split('T')[0];
+      const dateStr = getLocalDateKey(d);
       if (chartType === 'count') {
         const count = checkinRecords[dateStr] ? Object.keys(checkinRecords[dateStr]).length : 0;
         data.push(count);
@@ -881,10 +956,10 @@ function initDateRangeDefaults() {
   const startEl = document.getElementById('statsStartDate');
   const endEl = document.getElementById('statsEndDate');
   if (startEl && !startEl.value) {
-    startEl.value = weekAgo.toISOString().split('T')[0];
+    startEl.value = getLocalDateKey(weekAgo);
   }
   if (endEl && !endEl.value) {
-    endEl.value = today.toISOString().split('T')[0];
+    endEl.value = getLocalDateKey(today);
   }
 }
 // 按日期范围查询统计
@@ -895,7 +970,7 @@ window.queryStatsByDateRange = function() {
     showToast("请选择开始和结束日期", "error");
     return;
   }
-  if (new Date(startDate) > new Date(endDate)) {
+  if (parseLocalDate(startDate) > parseLocalDate(endDate)) {
     showToast("开始日期不能晚于结束日期", "error");
     return;
   }
@@ -909,7 +984,7 @@ function getWeekCheckinCount() {
   startOfWeek.setHours(0, 0, 0, 0);
   let count = 0;
   Object.keys(checkinRecords).forEach(dateStr => {
-    const date = new Date(dateStr);
+    const date = parseLocalDate(dateStr);
     if (date >= startOfWeek && date <= now) {
       count += Object.keys(checkinRecords[dateStr]).length;
     }
@@ -923,7 +998,7 @@ function getMonthCheckinCount() {
   const month = now.getMonth();
   let count = 0;
   Object.keys(checkinRecords).forEach(dateStr => {
-    const date = new Date(dateStr);
+    const date = parseLocalDate(dateStr);
     if (date.getFullYear() === year && date.getMonth() === month) {
       count += Object.keys(checkinRecords[dateStr]).length;
     }
@@ -932,7 +1007,7 @@ function getMonthCheckinCount() {
 }
 // 获取今日学习总时长
 function getTodayDuration() {
-  const today = new Date().toISOString().split('T')[0];
+  const today = getLocalDateKey();
   let duration = 0;
   if (checkinRecords[today]) {
     Object.values(checkinRecords[today]).forEach(record => {
@@ -949,7 +1024,7 @@ function getWeekDuration() {
   startOfWeek.setHours(0, 0, 0, 0);
   let duration = 0;
   Object.keys(checkinRecords).forEach(dateStr => {
-    const date = new Date(dateStr);
+    const date = parseLocalDate(dateStr);
     if (date >= startOfWeek && date <= now) {
       Object.values(checkinRecords[dateStr]).forEach(record => {
         duration += record.duration || 0;
@@ -966,7 +1041,7 @@ function calculateStreak() {
   for (let i = 0; i < 1000; i++) {
     const checkDate = new Date(today);
     checkDate.setDate(today.getDate() - i);
-    const dateStr = checkDate.toISOString().split('T')[0];
+    const dateStr = getLocalDateKey(checkDate);
     if (checkinRecords[dateStr] && Object.keys(checkinRecords[dateStr]).length > 0) {
       streak++;
     } else {
@@ -997,8 +1072,8 @@ function renderTaskStatsList() {
   const sortedTasks = tasks
     .map(task => ({
       ...task,
-      count: taskStats[task.id]?.count || 0,
-      duration: taskStats[task.id]?.duration || 0
+      count: taskStats[task.id] ? taskStats[task.id].count : 0,
+      duration: taskStats[task.id] ? taskStats[task.id].duration : 0
     }))
     .sort((a, b) => b.count - a.count);
   sortedTasks.forEach(task => {
@@ -1011,8 +1086,8 @@ function renderTaskStatsList() {
           ${ICONS[task.icon] || ICONS.star}
         </div>
         <div class="task-stat-info">
-          <h5>${task.name}</h5>
-          <p class="task-stat-category">${task.category}</p>
+          <h5>${escapeHTML(task.name)}</h5>
+          <p class="task-stat-category">${escapeHTML(task.category)}</p>
         </div>
       </div>
       <div style="text-align: right;">
@@ -1035,141 +1110,212 @@ function renderTaskStatsList() {
 function generateShareReport() {
   try {
     const today = new Date();
+    const todayKey = getLocalDateKey(today);
     const todayStr = `${today.getFullYear()}年${today.getMonth() + 1}月${today.getDate()}日`;
-    const todayCount = checkinRecords[today.toISOString().split('T')[0]] ? Object.keys(checkinRecords[today.toISOString().split('T')[0]]).length : 0;
+    const todayRecords = checkinRecords[todayKey] || {};
+    const todayCount = Object.keys(todayRecords).length;
     const todayDuration = getTodayDuration();
     const weekCount = getWeekCheckinCount();
     const weekDuration = getWeekDuration();
-    const monthCount = getMonthCheckinCount();
     const streak = calculateStreak();
-    // 统计分类打卡次数
-    const categoryStats = {};
-    Object.values(checkinRecords).forEach(dayRecords => {
-      Object.entries(dayRecords).forEach(([taskId]) => {
+
+    const todayTaskNames = Object.keys(todayRecords)
+      .map(taskId => {
         const task = tasks.find(t => t.id === taskId);
-        if (task) {
-          if (!categoryStats[task.category]) {
-            categoryStats[task.category] = 0;
-          }
-          categoryStats[task.category]++;
-        }
-      });
-    });
-    // 生成分类列表HTML
-    const sortedCategories = Object.entries(categoryStats).sort((a, b) => b[1] - a[1]).slice(0, 5);
-    let categorySvg = '';
-    if (sortedCategories.length === 0) {
-      categorySvg = `<text x="300" y="520" font-size="16" fill="#6b7280" text-anchor="middle">还没有打卡记录哦</text>`;
-    } else {
-      sortedCategories.forEach(([category, count], index) => {
-        const yPos = 460 + index * 44;
-        categorySvg += `
-          <line x1="60" y1="${yPos + 30}" x2="540" y2="${yPos + 30}" stroke="#f3f4f6" stroke-width="1"/>
-          <text x="70" y="${yPos + 18}" font-size="16" font-weight="500" fill="#1f2937">${category}</text>
-          <text x="530" y="${yPos + 18}" font-size="16" font-weight="600" fill="#4F46E5" text-anchor="end">${count} 次</text>`;
+        return task ? task.name : "";
+      })
+      .filter(Boolean)
+      .slice(0, 5);
+    const todayTaskText = todayTaskNames.length ? todayTaskNames.join("、") : "今天还没有打卡，等一个小星星";
+
+    const weekDays = [];
+    let maxDayCount = 1;
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(today);
+      d.setDate(today.getDate() - i);
+      const dateKey = getLocalDateKey(d);
+      const records = checkinRecords[dateKey] || {};
+      const count = Object.keys(records).length;
+      const duration = Object.values(records).reduce((sum, record) => sum + (record.duration || 0), 0);
+      maxDayCount = Math.max(maxDayCount, count);
+      weekDays.push({
+        label: `${d.getMonth() + 1}/${d.getDate()}`,
+        weekday: ["日", "一", "二", "三", "四", "五", "六"][d.getDay()],
+        count,
+        duration
       });
     }
-    // 生成SVG卡片
-    const svg = `<?xml version="1.0" encoding="UTF-8"?>
-    <svg width="600" height="800" viewBox="0 0 600 800" xmlns="http://www.w3.org/1999/svg">
-      <defs>
-        <linearGradient id="bgGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" style="stop-color:#f0f9ff;stop-opacity:1" />
-          <stop offset="100%" style="stop-color:#e0e7ff;stop-opacity:1" />
-        </linearGradient>
-        <linearGradient id="headerGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-          <stop offset="0%" style="stop-color:#ec4899;stop-opacity:1" />
-          <stop offset="100%" style="stop-color:#f97316;stop-opacity:1" />
-        </linearGradient>
-      </defs>
-      <rect width="600" height="800" fill="url(#bgGradient)" rx="20" ry="20"/>
-      <circle cx="60" cy="50" r="12" fill="#fbbf24" opacity="0.5"/>
-      <circle cx="530" cy="70" r="10" fill="#ec4899" opacity="0.5"/>
-      <circle cx="80" cy="730" r="14" fill="#8b5cf6" opacity="0.5"/>
-      <circle cx="510" cy="720" r="8" fill="#06b6d4" opacity="0.5"/>
-      <rect x="0" y="0" width="600" height="140" fill="url(#headerGradient)" rx="20" ry="20"/>
-      <text x="300" y="55" font-size="34" font-weight="bold" fill="white" text-anchor="middle">安可的打卡报告</text>
-      <text x="300" y="90" font-size="20" fill="white" text-anchor="middle">${todayStr}</text>
-      <rect x="30" y="170" width="540" height="200" fill="white" rx="16" ry="16"/>
-      <text x="60" y="205" font-size="22" font-weight="bold" fill="#1f2937">学习统计</text>
-      <g transform="translate(60, 220)">
-        <rect x="0" y="0" width="70" height="120" fill="#eff6ff" rx="12" ry="12"/>
-        <text x="35" y="40" font-size="20" text-anchor="middle" fill="#1d4ed8">打卡</text>
-        <text x="35" y="70" font-size="22" font-weight="bold" fill="#1d4ed8" text-anchor="middle">${todayCount}</text>
-        <text x="35" y="95" font-size="10" fill="#6b7280" text-anchor="middle">今日打卡数</text>
-        <rect x="85" y="0" width="70" height="120" fill="#eff6ff" rx="12" ry="12"/>
-        <text x="120" y="40" font-size="20" text-anchor="middle" fill="#1d4ed8">时长</text>
-        <text x="120" y="70" font-size="22" font-weight="bold" fill="#1d4ed8" text-anchor="middle">${todayDuration}</text>
-        <text x="120" y="95" font-size="10" fill="#6b7280" text-anchor="middle">今日时长(分钟)</text>
-        <rect x="170" y="0" width="70" height="120" fill="#f0fdf4" rx="12" ry="12"/>
-        <text x="205" y="40" font-size="20" text-anchor="middle" fill="#166534">打卡</text>
-        <text x="205" y="70" font-size="22" font-weight="bold" fill="#166534" text-anchor="middle">${weekCount}</text>
-        <text x="205" y="95" font-size="10" fill="#6b7280" text-anchor="middle">本周打卡数</text>
-        <rect x="255" y="0" width="70" height="120" fill="#f0fdf4" rx="12" ry="12"/>
-        <text x="290" y="40" font-size="20" text-anchor="middle" fill="#166534">时长</text>
-        <text x="290" y="70" font-size="22" font-weight="bold" fill="#166534" text-anchor="middle">${weekDuration}</text>
-        <text x="290" y="95" font-size="10" fill="#6b7280" text-anchor="middle">本周时长(分钟)</text>
-        <rect x="340" y="0" width="70" height="120" fill="#faf5ff" rx="12" ry="12"/>
-        <text x="375" y="40" font-size="20" text-anchor="middle" fill="#7e22ce">月度</text>
-        <text x="375" y="70" font-size="22" font-weight="bold" fill="#7e22ce" text-anchor="middle">${monthCount}</text>
-        <text x="375" y="95" font-size="10" fill="#6b7280" text-anchor="middle">本月打卡数</text>
-        <rect x="425" y="0" width="70" height="120" fill="#fff7ed" rx="12" ry="12"/>
-        <text x="460" y="40" font-size="20" text-anchor="middle" fill="#9a3412">连续</text>
-        <text x="460" y="70" font-size="22" font-weight="bold" fill="#9a3412" text-anchor="middle">${streak}</text>
-        <text x="460" y="95" font-size="10" fill="#6b7280" text-anchor="middle">连续打卡天数</text>
-      </g>
-      <rect x="30" y="390" width="540" height="300" fill="white" rx="16" ry="16"/>
-      <text x="60" y="425" font-size="22" font-weight="bold" fill="#1f2937">各分类打卡次数</text>
-      ${categorySvg}
-      <rect x="30" y="710" width="540" height="60" fill="#fef3c7" rx="16" ry="16"/>
-      <text x="300" y="748" font-size="20" font-weight="bold" fill="#92400e" text-anchor="middle">安可太棒了！继续加油哦！</text>
-    </svg>`;
-    const svgDataUrl = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-    img.onload = function() {
-      const canvas = document.createElement('canvas');
-      canvas.width = 600;
-      canvas.height = 800;
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(img, 0, 0);
-      try {
-        currentShareImageUrl = canvas.toDataURL('image/png');
-      } catch (e) {
-        currentShareImageUrl = svgDataUrl;
-      }
-      document.getElementById('shareImage').src = currentShareImageUrl;
-      document.getElementById('shareModal').style.display = 'flex';
-      showToast('分享报告生成成功！', 'success');
-    };
-    img.onerror = function() {
-      currentShareImageUrl = svgDataUrl;
-      document.getElementById('shareImage').src = currentShareImageUrl;
-      document.getElementById('shareModal').style.display = 'flex';
-      showToast('分享报告生成成功！', 'success');
-    };
-    img.src = svgDataUrl;
+
+    currentShareImageUrl = renderShareReportPng({
+      todayStr,
+      todayCount,
+      todayDuration,
+      streak,
+      todayTaskText,
+      weekCount,
+      weekDuration,
+      weekDays,
+      maxDayCount
+    });
+    document.getElementById('shareImage').src = currentShareImageUrl;
+    document.getElementById('shareModal').style.display = 'flex';
+    showToast('分享报告生成成功！', 'success');
   } catch (error) {
     console.error('生成报告失败:', error);
     showToast('生成报告失败: ' + error.message, 'error');
   }
 }
+
+function renderShareReportPng(report) {
+  const canvas = document.createElement("canvas");
+  canvas.width = 600;
+  canvas.height = 800;
+  const ctx = canvas.getContext("2d");
+
+  const gradient = ctx.createLinearGradient(0, 0, 0, 800);
+  gradient.addColorStop(0, "#f0fdfa");
+  gradient.addColorStop(0.52, "#fff7ed");
+  gradient.addColorStop(1, "#eff6ff");
+  ctx.fillStyle = gradient;
+  roundRect(ctx, 0, 0, 600, 800, 28);
+  ctx.fill();
+
+  drawCircle(ctx, 72, 72, 16, "rgba(251, 191, 36, 0.55)");
+  drawCircle(ctx, 526, 92, 14, "rgba(251, 113, 133, 0.45)");
+  drawCircle(ctx, 82, 720, 18, "rgba(96, 165, 250, 0.32)");
+  drawCircle(ctx, 516, 712, 12, "rgba(52, 211, 153, 0.42)");
+
+  const headerGradient = ctx.createLinearGradient(28, 28, 572, 164);
+  headerGradient.addColorStop(0, "#2dd4bf");
+  headerGradient.addColorStop(0.55, "#60a5fa");
+  headerGradient.addColorStop(1, "#fb7185");
+  ctx.fillStyle = headerGradient;
+  roundRect(ctx, 28, 28, 544, 136, 26);
+  ctx.fill();
+  drawText(ctx, "安可的打卡报告", 300, 78, 34, "#ffffff", "center", "800");
+  drawText(ctx, report.todayStr, 300, 114, 19, "#ffffff", "center", "500");
+  drawText(ctx, "每天一点点，星星亮一点", 300, 142, 16, "#ecfeff", "center", "500");
+
+  drawPanel(ctx, 38, 190, 524, 164);
+  drawText(ctx, "今日进度", 65, 230, 22, "#0f172a", "left", "800");
+  drawMetric(ctx, 62, 252, "今日打卡", report.todayCount, "#ecfeff", "#0f766e");
+  drawMetric(ctx, 216, 252, "今日分钟", report.todayDuration, "#fff7ed", "#c2410c");
+  drawMetric(ctx, 370, 252, "连续天数", report.streak, "#eff6ff", "#2563eb");
+
+  drawPanel(ctx, 38, 380, 524, 96);
+  drawText(ctx, "今天完成了", 65, 410, 20, "#0f172a", "left", "800");
+  wrapSvgText(report.todayTaskText, 19, 2).forEach((line, index) => {
+    drawText(ctx, line, 65, 438 + index * 26, 18, "#334155", "left", "500");
+  });
+
+  drawPanel(ctx, 38, 502, 524, 178);
+  drawText(ctx, "最近一周", 65, 540, 22, "#0f172a", "left", "800");
+  drawText(ctx, `${report.weekCount} 次 · ${report.weekDuration} 分钟`, 535, 540, 15, "#0f766e", "right", "700");
+  const barGradient = ctx.createLinearGradient(0, 502, 0, 650);
+  barGradient.addColorStop(0, "#fbbf24");
+  barGradient.addColorStop(1, "#34d399");
+  report.weekDays.forEach((day, index) => {
+    const x = 62 + index * 70;
+    const barHeight = Math.max(10, Math.round((day.count / report.maxDayCount) * 96));
+    const y = 598 - barHeight;
+    ctx.fillStyle = day.count > 0 ? barGradient : "#e2e8f0";
+    roundRect(ctx, x, y, 34, barHeight, 12);
+    ctx.fill();
+    drawText(ctx, String(day.count), x + 17, y - 10, 16, "#0f766e", "center", "700");
+    drawText(ctx, `周${day.weekday}`, x + 17, 630, 13, "#64748b", "center", "500");
+    drawText(ctx, day.label, x + 17, 650, 12, "#94a3b8", "center", "500");
+  });
+
+  ctx.fillStyle = "#fef3c7";
+  roundRect(ctx, 56, 710, 488, 54, 20);
+  ctx.fill();
+  drawText(ctx, "安可太棒了，继续加油哦！", 300, 744, 20, "#92400e", "center", "800");
+  return canvas.toDataURL("image/png");
+}
+
+function drawPanel(ctx, x, y, width, height) {
+  ctx.fillStyle = "#ffffff";
+  roundRect(ctx, x, y, width, height, 24);
+  ctx.fill();
+}
+
+function drawMetric(ctx, x, y, label, value, bg, color) {
+  ctx.fillStyle = bg;
+  roundRect(ctx, x, y, 132, 72, 18);
+  ctx.fill();
+  drawText(ctx, String(value), x + 66, y + 30, 24, color, "center", "800");
+  drawText(ctx, label, x + 66, y + 54, 14, "#475569", "center", "500");
+}
+
+function drawText(ctx, text, x, y, size, color, align = "left", weight = "400") {
+  ctx.font = `${weight} ${size}px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`;
+  ctx.fillStyle = color;
+  ctx.textAlign = align;
+  ctx.textBaseline = "middle";
+  ctx.fillText(text, x, y);
+}
+
+function drawCircle(ctx, x, y, radius, color) {
+  ctx.beginPath();
+  ctx.arc(x, y, radius, 0, Math.PI * 2);
+  ctx.fillStyle = color;
+  ctx.fill();
+}
+
+function roundRect(ctx, x, y, width, height, radius) {
+  const r = Math.min(radius, width / 2, height / 2);
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + width, y, x + width, y + height, r);
+  ctx.arcTo(x + width, y + height, x, y + height, r);
+  ctx.arcTo(x, y + height, x, y, r);
+  ctx.arcTo(x, y, x + width, y, r);
+  ctx.closePath();
+}
+
 // 关闭分享弹窗
 window.closeShareModal = function() {
   document.getElementById('shareModal').style.display = 'none';
   document.getElementById('shareImage').src = '';
   currentShareImageUrl = null;
 }
-// 保存分享图片
+// 复制分享图片
+window.copyShareImage = function() {
+  if (!currentShareImageUrl) return;
+  if (!navigator.clipboard || !window.ClipboardItem || !currentShareImageUrl.startsWith('data:image/png')) {
+    downloadShareImage();
+    showToast('浏览器不支持复制图片，已改为下载图片', 'info');
+    closeShareModal();
+    return;
+  }
+  const blob = dataUrlToBlob(currentShareImageUrl);
+  const clipboardData = {};
+  clipboardData[blob.type] = blob;
+  navigator.clipboard.write([
+    new ClipboardItem(clipboardData)
+  ]).then(function() {
+    showToast('图片已复制，可以粘贴分享啦', 'success');
+    closeShareModal();
+  }).catch(function() {
+    downloadShareImage();
+    showToast('浏览器不支持复制图片，已改为下载图片', 'info');
+    closeShareModal();
+  });
+}
+
+// 旧入口保留，避免历史按钮或缓存调用失败
 window.saveShareImage = function() {
+  downloadShareImage();
+  closeShareModal();
+}
+
+function downloadShareImage() {
   if (!currentShareImageUrl) return;
   const isPng = currentShareImageUrl.startsWith('data:image/png');
   const link = document.createElement('a');
-  link.download = `安可的打卡报告_${new Date().toISOString().split('T')[0]}.${isPng ? 'png' : 'svg'}`;
+  link.download = `安可的打卡报告_${getLocalDateKey()}.${isPng ? 'png' : 'svg'}`;
   link.href = currentShareImageUrl;
   link.click();
-  showToast('图片已保存到相册', 'success');
-  closeShareModal();
 }
 // ==================== 工具函数 ====================
 // 同步家长选择
@@ -1196,6 +1342,44 @@ function formatDate(dateString) {
   const month = date.getMonth() + 1;
   const day = date.getDate();
   return `${month}月${day}日`;
+}
+function getLocalDateKey(date = new Date()) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+function parseLocalDate(dateStr) {
+  const [year, month, day] = String(dateStr).split("-").map(Number);
+  return new Date(year, (month || 1) - 1, day || 1);
+}
+function escapeHTML(value) {
+  return String(value == null ? "" : value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+function wrapSvgText(text, maxChars = 20, maxLines = 3) {
+  const chars = Array.from(String(text || ""));
+  const lines = [];
+  for (let i = 0; i < chars.length && lines.length < maxLines; i += maxChars) {
+    const line = chars.slice(i, i + maxChars).join("");
+    lines.push(i + maxChars < chars.length && lines.length === maxLines - 1 ? `${line}...` : line);
+  }
+  return lines.length ? lines : [""];
+}
+function dataUrlToBlob(dataUrl) {
+  const parts = dataUrl.split(",");
+  const mimeMatch = parts[0].match(/:(.*?);/);
+  const mime = mimeMatch ? mimeMatch[1] : "image/png";
+  const binary = atob(parts[1]);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return new Blob([bytes], { type: mime });
 }
 // 显示提示消息
 function showToast(message, type = "info") {

@@ -11,6 +11,7 @@
             padding: 0;
             box-sizing: border-box;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
@@ -101,6 +102,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            touch-action: manipulation;
         }
 
         .btn:hover {
@@ -162,6 +164,7 @@
             cursor: pointer;
             transition: all 0.2s;
             font-size: 16px;
+            touch-action: manipulation;
         }
 
         .parent-btn:hover {
@@ -203,6 +206,7 @@
             font-weight: 500;
             transition: all 0.2s;
             min-width: 100px;
+            touch-action: manipulation;
         }
 
         .view-btn.active {
@@ -227,6 +231,7 @@
             transition: all 0.2s;
             width: 100%;
             margin-bottom: 24px;
+            touch-action: manipulation;
         }
 
         .share-btn:hover {
@@ -266,6 +271,7 @@
             font-size: 14px;
             white-space: nowrap;
             transition: all 0.2s;
+            touch-action: manipulation;
         }
 
         .category-btn.active {
@@ -367,6 +373,7 @@
             cursor: pointer;
             transition: all 0.2s;
             min-width: 70px;
+            touch-action: manipulation;
         }
 
         .checkin-btn {
@@ -1073,6 +1080,230 @@
             gap: 12px;
         }
 
+        /* UI 美化覆盖 */
+        body {
+            background:
+                radial-gradient(circle at 12% 8%, rgba(255, 214, 102, 0.32), transparent 26%),
+                radial-gradient(circle at 88% 10%, rgba(74, 222, 128, 0.22), transparent 22%),
+                linear-gradient(180deg, #f7fbff 0%, #fff9ef 54%, #f5fbf7 100%);
+            color: #273042;
+        }
+
+        header {
+            background: linear-gradient(135deg, #2dd4bf 0%, #60a5fa 48%, #f472b6 100%);
+            box-shadow: 0 12px 30px rgba(37, 99, 235, 0.18);
+        }
+
+        .logo-icon,
+        .welcome-icon {
+            filter: drop-shadow(0 4px 8px rgba(251, 191, 36, 0.35));
+        }
+
+        .welcome-card,
+        .calendar-container,
+        .day-tasks-container,
+        .stats-container,
+        .task-stats-container,
+        .modal-content {
+            border-radius: 22px;
+            border: 1px solid rgba(96, 165, 250, 0.16);
+            box-shadow: 0 18px 45px rgba(56, 83, 117, 0.12);
+        }
+
+        .view-tabs {
+            background-color: rgba(255, 255, 255, 0.86);
+            border-radius: 18px;
+            padding: 6px;
+            border: 1px solid rgba(125, 211, 252, 0.3);
+            box-shadow: 0 12px 30px rgba(56, 83, 117, 0.1);
+        }
+
+        .view-btn.active,
+        .stats-tab-btn.active,
+        .chart-type-btn.active,
+        .btn-primary {
+            background: linear-gradient(135deg, #14b8a6, #3b82f6);
+            box-shadow: 0 8px 18px rgba(59, 130, 246, 0.22);
+        }
+
+        .share-btn {
+            background: linear-gradient(135deg, #fb7185, #fbbf24);
+            border-radius: 14px;
+            box-shadow: 0 10px 20px rgba(251, 113, 133, 0.22);
+        }
+
+        .category-btn {
+            border-radius: 999px;
+            border: 1px solid rgba(148, 163, 184, 0.25);
+            background-color: rgba(255, 255, 255, 0.86);
+        }
+
+        .category-btn.active {
+            background: #fff1d6;
+            color: #9a3412;
+            border-color: #fbbf24;
+            box-shadow: 0 8px 16px rgba(251, 191, 36, 0.16);
+        }
+
+        .category-add-btn {
+            padding: 8px 16px;
+            border-radius: 999px;
+            border: 1px dashed #38bdf8;
+            background: rgba(240, 249, 255, 0.92);
+            color: #0369a1;
+            cursor: pointer;
+            font-size: 14px;
+            white-space: nowrap;
+        }
+
+        .task-card {
+            border-radius: 18px;
+            border: 1px solid rgba(148, 163, 184, 0.18);
+            box-shadow: 0 14px 30px rgba(56, 83, 117, 0.08);
+        }
+
+        .task-card.checked {
+            background: linear-gradient(135deg, #f0fdf4, #ecfeff);
+            border-color: #86efac;
+        }
+
+        .group-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .group-title::before {
+            content: "";
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #fbbf24;
+            box-shadow: 16px 0 0 #34d399;
+        }
+
+        .task-icon,
+        .day-task-icon,
+        .task-stat-icon,
+        .stat-icon {
+            border-radius: 16px;
+        }
+
+        .action-btn,
+        .btn,
+        .btn-primary,
+        .btn-secondary,
+        .btn-danger,
+        .btn-green,
+        .form-control {
+            border-radius: 12px;
+        }
+
+        .checkin-btn,
+        .btn-green {
+            background: linear-gradient(135deg, #22c55e, #14b8a6);
+        }
+
+        .modal {
+            background-color: rgba(15, 23, 42, 0.45);
+            backdrop-filter: blur(6px);
+        }
+
+        .modal-content.task-manage-content {
+            max-width: 860px;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .task-manage-grid {
+            display: grid;
+            gap: 20px;
+        }
+
+        .task-form-panel,
+        .existing-panel {
+            min-width: 0;
+        }
+
+        .existing-panel {
+            background: #f8fbff;
+            border: 1px solid rgba(125, 211, 252, 0.22);
+            border-radius: 16px;
+            padding: 14px;
+        }
+
+        .existing-tasks-list {
+            max-height: 420px;
+        }
+
+        .existing-task-item {
+            background: white;
+            border: 1px solid rgba(148, 163, 184, 0.16);
+            border-radius: 12px;
+        }
+
+        .form-grid {
+            display: grid;
+            gap: 14px;
+        }
+
+        .form-hint {
+            margin-top: 6px;
+            color: #64748b;
+            font-size: 12px;
+        }
+
+        .share-modal-content {
+            max-width: 430px;
+        }
+
+        .share-image {
+            border-radius: 18px;
+            border: 1px solid rgba(251, 191, 36, 0.28);
+        }
+
+        button,
+        select,
+        input,
+        textarea {
+            touch-action: manipulation;
+            font-size: 16px;
+        }
+
+        @media (max-width: 767px) {
+            .modal {
+                align-items: flex-start;
+                padding: 12px;
+                overflow-y: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .modal-content {
+                max-height: calc(100dvh - 24px);
+                max-height: calc(100vh - 24px);
+            }
+
+            .modal-body {
+                padding: 16px;
+            }
+
+            .form-actions,
+            .share-actions {
+                flex-direction: column-reverse;
+            }
+
+            .btn-primary,
+            .btn-secondary,
+            .btn-danger,
+            .btn-green {
+                min-height: 44px;
+            }
+
+            .task-manage-content .existing-tasks-list {
+                max-height: 240px;
+            }
+        }
+
         /* 响应式适配 */
         @media (min-width: 768px) {
             .header-container {
@@ -1136,6 +1367,19 @@
             .stats-cards {
                 grid-template-columns: repeat(3, 1fr);
             }
+
+            .task-manage-grid {
+                grid-template-columns: minmax(0, 1fr) minmax(260px, 0.9fr);
+                align-items: start;
+            }
+
+            .form-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .form-group.full {
+                grid-column: 1 / -1;
+            }
         }
         @media (min-width: 1024px) {
             .stats-cards {
@@ -1149,7 +1393,9 @@
         // 全局错误捕获
         window.onerror = function(msg, url, line) {
             console.error("系统错误:", msg, "第" + line + "行");
-            showToast("系统出了点小问题，请刷新页面重试", "error");
+            if (window.showToast) {
+                showToast("系统出了点小问题，请刷新页面重试", "error");
+            }
             return true;
         };
 
@@ -1202,11 +1448,11 @@
                 <div id="parentInfo" style="display: none;">
                     <span class="welcome-text">欢迎，<span id="parentName"></span> 👋</span>
                 </div>
-                <button id="manageTasksBtn" class="btn">
-                    ⚙️
+                <button id="manageTasksBtn" class="btn" title="任务管理">
+                    🧩
                     <span class="btn-text">任务管理</span>
                 </button>
-                <button id="changeParentBtn" class="btn">
+                <button id="changeParentBtn" class="btn" title="切换身份">
                     👤
                     <span class="btn-text">切换身份</span>
                 </button>
@@ -1258,7 +1504,7 @@
             <div class="view-header">
                 <div class="view-tabs">
                     <button class="view-btn active" data-view="tasks">
-                        ✅ 今日打卡
+                        ⭐ 今日打卡
                     </button>
                     <button class="view-btn" data-view="calendar">
                         📅 历史记录
@@ -1268,7 +1514,7 @@
                     </button>
                 </div>
                 <button id="shareBtn" class="share-btn">
-                    🔗 分享报告
+                    🖼️ 分享报告
                 </button>
             </div>
 
@@ -1424,7 +1670,7 @@
             <div class="modal-body">
                 <div class="form-group">
                     <label class="form-label">学习时长（分钟）</label>
-                    <input type="number" id="checkinDuration" class="form-control" placeholder="请输入学习时长，比如20" min="1" required>
+                    <input type="number" id="checkinDuration" class="form-control" value="20" placeholder="请输入学习时长，比如20" min="1" required>
                 </div>
                 <div class="form-group">
                     <label class="form-label">学习情况说明（可选）</label>
@@ -1440,93 +1686,97 @@
 
     <!-- 任务管理弹窗 -->
     <div id="taskManageModal" class="modal">
-        <div class="modal-content">
+        <div class="modal-content task-manage-content">
             <div class="modal-header">
                 <h3 class="modal-title" id="taskModalTitle">管理任务</h3>
                 <button class="close-btn" onclick="closeTaskManageModal()">×</button>
             </div>
             <div class="modal-body">
-                <form id="taskForm" onsubmit="saveTask(event)">
-                    <input type="hidden" id="editTaskId">
+                <div class="task-manage-grid">
+                    <form id="taskForm" class="task-form-panel" onsubmit="saveTask(event)">
+                        <input type="hidden" id="editTaskId">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label class="form-label">任务分类</label>
+                                <select id="taskCategory" class="form-control">
+                                    <option value="拼音">拼音</option>
+                                    <option value="古诗词">古诗词</option>
+                                    <option value="文言文">文言文</option>
+                                    <option value="数学">数学</option>
+                                    <option value="英文阅读">英文阅读</option>
+                                    <option value="分级阅读">分级阅读</option>
+                                    <option value="迪士尼英语">迪士尼英语</option>
+                                    <option value="听力训练">听力训练</option>
+                                    <option value="其他">其他</option>
+                                    <option value="__custom__">新增任务类型...</option>
+                                </select>
+                                <input type="text" id="taskCategoryCustom" class="form-control hidden" placeholder="输入新的任务类型" style="margin-top: 8px;">
+                                <div class="form-hint">可选择已有类型，也可新增一种类型。</div>
+                            </div>
 
-                    <div class="form-group">
-                        <label class="form-label">任务分类</label>
-                        <select id="taskCategory" class="form-control">
-                            <option value="拼音">拼音</option>
-                            <option value="古诗词">古诗词</option>
-                            <option value="文言文">文言文</option>
-                            <option value="数学">数学</option>
-                            <option value="英文阅读">英文阅读</option>
-                            <option value="分级阅读">分级阅读</option>
-                            <option value="迪士尼英语">迪士尼英语</option>
-                            <option value="听力训练">听力训练</option>
-                            <option value="其他">其他</option>
-                        </select>
-                    </div>
+                            <div class="form-group">
+                                <label class="form-label">图标类型</label>
+                                <select id="taskIcon" class="form-control">
+                                    <option value="star">星星</option>
+                                    <option value="book">书本</option>
+                                    <option value="feather">羽毛笔</option>
+                                    <option value="scroll">卷轴</option>
+                                    <option value="calculator">计算器</option>
+                                    <option value="language">语言</option>
+                                    <option value="headphones">耳机</option>
+                                    <option value="tv">电视</option>
+                                    <option value="music">音乐</option>
+                                    <option value="art">画画</option>
+                                    <option value="sport">运动</option>
+                                </select>
+                            </div>
 
-                    <div class="form-group">
-                        <label class="form-label">任务名称</label>
-                        <input type="text" id="taskName" class="form-control" placeholder="例如：摩比爱拼音" required>
-                    </div>
+                            <div class="form-group full">
+                                <label class="form-label">任务名称</label>
+                                <input type="text" id="taskName" class="form-control" placeholder="例如：摩比爱拼音" required>
+                            </div>
 
-                    <div class="form-group">
-                        <label class="form-label">打卡目标</label>
-                        <input type="text" id="taskTarget" class="form-control" placeholder="例如：每天1-2课" required>
-                    </div>
+                            <div class="form-group full">
+                                <label class="form-label">打卡目标</label>
+                                <input type="text" id="taskTarget" class="form-control" placeholder="例如：每天1-2课" required>
+                            </div>
 
-                    <div class="form-group">
-                        <label class="form-label">图标类型</label>
-                        <select id="taskIcon" class="form-control">
-                            <option value="star">星星</option>
-                            <option value="book">书本</option>
-                            <option value="feather">羽毛笔</option>
-                            <option value="scroll">卷轴</option>
-                            <option value="calculator">计算器</option>
-                            <option value="language">语言</option>
-                            <option value="headphones">耳机</option>
-                            <option value="tv">电视</option>
-                            <option value="music">音乐</option>
-                            <option value="art">画画</option>
-                            <option value="sport">运动</option>
-                        </select>
-                    </div>
+                            <div class="form-group">
+                                <label class="form-label">颜色</label>
+                                <select id="taskColor" class="form-control">
+                                    <option value="blue">蓝色</option>
+                                    <option value="green">绿色</option>
+                                    <option value="purple">紫色</option>
+                                    <option value="orange">橙色</option>
+                                    <option value="red">红色</option>
+                                    <option value="indigo">靛蓝</option>
+                                    <option value="pink">粉色</option>
+                                    <option value="teal">青蓝</option>
+                                    <option value="yellow">黄色</option>
+                                </select>
+                            </div>
+                        </div>
 
-                    <div class="form-group">
-                        <label class="form-label">颜色</label>
-                        <select id="taskColor" class="form-control">
-                            <option value="blue">蓝色</option>
-                            <option value="green">绿色</option>
-                            <option value="purple">紫色</option>
-                            <option value="orange">橙色</option>
-                            <option value="red">红色</option>
-                            <option value="indigo">靛蓝</option>
-                            <option value="pink">粉色</option>
-                            <option value="teal">青蓝</option>
-                            <option value="yellow">黄色</option>
-                        </select>
-                    </div>
+                        <div class="form-actions">
+                            <button type="button" id="deleteTaskBtn" class="btn-danger hidden" onclick="deleteCurrentTask()">
+                                🗑️ 删除
+                            </button>
+                            <button type="submit" class="btn-primary">
+                                💾 保存任务
+                            </button>
+                        </div>
+                    </form>
 
-                    <div class="form-actions">
-                        <button type="button" id="deleteTaskBtn" class="btn-danger hidden" onclick="deleteCurrentTask()">
-                            🗑️ 删除任务
-                        </button>
-                        <button type="submit" class="btn-primary">
-                            💾 保存
-                        </button>
-                    </div>
-                </form>
-
-                <hr class="hr">
-
-                <div>
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-                        <h4 style="font-weight: 600;">现有任务列表</h4>
-                        <button type="button" id="addNewTaskBtn" class="btn-primary" onclick="resetTaskForm()" style="font-size: 12px; padding: 6px 12px;">
-                            ➕ 新增任务
-                        </button>
-                    </div>
-                    <div id="existingTasksList" class="existing-tasks-list">
-                        <!-- 现有任务列表动态生成 -->
+                    <div class="existing-panel">
+                        <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 16px;">
+                            <h4 style="font-weight: 700;">现有任务</h4>
+                            <button type="button" id="addNewTaskBtn" class="btn-primary" onclick="resetTaskForm()" style="font-size: 12px; padding: 8px 12px; flex: 0 0 auto;">
+                                ➕ 新增
+                            </button>
+                        </div>
+                        <div id="existingTasksList" class="existing-tasks-list">
+                            <!-- 现有任务列表动态生成 -->
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1535,7 +1785,7 @@
 
     <!-- 分享图片弹窗 -->
     <div id="shareModal" class="modal">
-        <div class="modal-content">
+        <div class="modal-content share-modal-content">
             <div class="modal-header">
                 <h3 class="modal-title">分享学习报告</h3>
                 <button class="close-btn" onclick="closeShareModal()">×</button>
@@ -1546,7 +1796,7 @@
                 </div>
                 <div class="share-actions">
                     <button class="btn-secondary" onclick="closeShareModal()">取消</button>
-                    <button class="btn-primary" onclick="saveShareImage()">保存图片</button>
+                    <button class="btn-primary" onclick="copyShareImage()">复制图片</button>
                 </div>
             </div>
         </div>
