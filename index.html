@@ -414,6 +414,7 @@
             padding: 24px;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
             margin-bottom: 24px;
+            overflow: hidden;
         }
 
         .calendar-header {
@@ -444,9 +445,10 @@
 
         .calendar-weekdays {
             display: grid;
-            grid-template-columns: repeat(7, 1fr);
+            grid-template-columns: repeat(7, minmax(0, 1fr));
             gap: 8px;
             margin-bottom: 8px;
+            width: 100%;
         }
 
         .weekday {
@@ -458,8 +460,9 @@
 
         .calendar-grid {
             display: grid;
-            grid-template-columns: repeat(7, 1fr);
+            grid-template-columns: repeat(7, minmax(0, 1fr));
             gap: 8px;
+            width: 100%;
         }
 
         .calendar-cell {
@@ -474,6 +477,7 @@
             cursor: pointer;
             transition: all 0.2s;
             padding: 4px;
+            min-width: 0;
         }
 
         .calendar-cell:hover {
@@ -1271,6 +1275,77 @@
         }
 
         @media (max-width: 767px) {
+            .main-container {
+                padding-left: 12px;
+                padding-right: 12px;
+            }
+
+            .calendar-container {
+                padding: 14px 10px 16px;
+                border-radius: 18px;
+            }
+
+            .calendar-header {
+                margin-bottom: 16px;
+                gap: 8px;
+            }
+
+            .calendar-title {
+                font-size: 22px;
+                line-height: 1.2;
+            }
+
+            .calendar-nav {
+                width: 40px;
+                height: 40px;
+                padding: 0;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                flex: 0 0 40px;
+            }
+
+            .calendar-weekdays,
+            .calendar-grid {
+                gap: 5px;
+            }
+
+            .weekday {
+                font-size: 13px;
+                line-height: 28px;
+                min-width: 0;
+            }
+
+            .calendar-cell {
+                border-radius: 10px;
+                padding: 2px;
+                min-height: 42px;
+            }
+
+            .calendar-cell.today {
+                border-width: 1px;
+            }
+
+            .calendar-cell.selected {
+                border-width: 2px;
+            }
+
+            .day-number {
+                font-size: 16px;
+                line-height: 1;
+                margin-bottom: 2px;
+            }
+
+            .badge {
+                font-size: 10px;
+                min-width: 18px;
+                height: 18px;
+                padding: 0 5px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+            }
+
             .modal {
                 align-items: flex-start;
                 padding: 12px;
